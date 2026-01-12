@@ -9,9 +9,11 @@ import java.util.Collection;
  * signature of the existing methods.
  */
 public class ChessPiece {
-
+    private final ChessGame.TeamColor pieceColor;
+    private final ChessPiece.PieceType type;
     public ChessPiece(ChessGame.TeamColor pieceColor, ChessPiece.PieceType type) {
-
+        this.pieceColor = pieceColor;
+        this.type = type;
     }
 
     /**
@@ -38,7 +40,7 @@ public class ChessPiece {
      */
     public PieceType getPieceType() {
 
-        return
+            throw new RuntimeException("Not implemented");
     }
 
     /**
@@ -50,5 +52,9 @@ public class ChessPiece {
      */
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
 
+            throw new RuntimeException("Not implemented");
     }
 }
+
+// possible moves for each enum and the
+// in in the peicemoves function logic for checking if a oiece is in bounds and already there

@@ -1,3 +1,13 @@
+To-Do
+
+- [ ] ChessBoard
+- [ ] ChessGame
+- [x] ChessMove
+- [ ] ChessPiece
+- [x] ChessPosition
+
+
+
 # tips relevant right now
 - In order for the tests to pass, you are required to override the equals() and hashCode() methods in your class implementations as necessary. This includes the ChessPosition, ChessPiece, ChessMove, and ChessBoard classes in particular. To do this automatically in IntelliJ, right click on the class code and select Code > Generate... > equals() and hashCode(). It is a good idea to generate these methods fairly early. However, IntelliJ will not be able to generate them properly until you have added the required fields to the class.
 - To understand why we need to override the equals() and hashCode() methods, see the instruction page on Java Object Class. https://github.com/softwareconstruction240/softwareconstruction/blob/main/instruction/java-object-class/java-object-class.md
