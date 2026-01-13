@@ -1,5 +1,6 @@
 package chess;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 /**
@@ -43,19 +44,30 @@ public class ChessGame {
     /**
      * Gets possible moves for a piece at the given location given an empty board
      *
-     * @param PieceType the piece to get valid moves for
+     * @param pieceType the piece to get valid moves for
      * @return Set of possible moves for requested piece given an empty board, or null if no piece at
      * startPosition
      */
-    public Collection<ChessMove>getPossibleMoves(){
-        switch(value){
-            case:
-
-                break
-            
+    public Collection<ChessMove> getPossibleMoves(ChessPiece.PieceType pieceType, ChessPosition piecePosition){
+        Collection<ChessMove> possibleMoves = new ArrayList<>();
+        switch(pieceType){
+            case KING:
+                possibleMoves.addAll(piecePosition.KingMoves());
+                break;
+            case QUEEN:
+                // Calculate Queen moves
+                break;
+            case BISHOP:
+                break;
+            case KNIGHT:
+                break;
+            case ROOK:
+                break;
+            case PAWN:
+                break;
+            default:
         }
-        // gets the pieces possible movements on an empty board.
-        //returns the collection
+        return possibleMoves;
     }
 
     /**
