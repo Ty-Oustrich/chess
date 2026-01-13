@@ -41,49 +41,9 @@ public class ChessGame {
         BLACK
     }
 
-    /**
-     * Gets possible moves for a piece at the given location given an empty board
-     *
-     * @param pieceType the piece to get valid moves for
-     * @return Set of possible moves for requested piece given an empty board, or null if no piece at
-     * startPosition
-     */
-    public Collection<ChessMove> getPossibleMoves(ChessPiece.PieceType pieceType, ChessPosition piecePosition){
-        Collection<ChessMove> possibleMoves = new ArrayList<>();
-        switch(pieceType){
-            case KING:
-                possibleMoves.addAll(piecePosition.KingMoves());
-                break;
-            case QUEEN:
-                // Calculate Queen moves
-                break;
-            case BISHOP:
-                break;
-            case KNIGHT:
-                break;
-            case ROOK:
-                break;
-            case PAWN:
-                break;
-            default:
-        }
-        return possibleMoves;
-    }
 
-    /**
-     * Gets a valid moves for a piece at the given location
-     *
-     * @param startPosition the piece to get valid moves for
-     * @return Set of valid moves for requested piece, or null if no piece at
-     * startPosition
-     */
-    public Collection<ChessMove> validMoves(ChessPosition startPosition) {
-        throw new RuntimeException("Not implemented");
-        // helper that get the pieces possible movements on an empty board.
-        //checks if the spots are valid.
-        //if valid, add to the collection
-        //return the collection
-    }
+
+
 
     /**
      * Makes a move in a chess game

@@ -1,5 +1,6 @@
 package chess;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 /**
@@ -40,8 +41,55 @@ public class ChessPiece {
      * @return which type of chess piece this piece is
      */
     public PieceType getPieceType() {
+        return type;
+    }
 
-            throw new RuntimeException("Not implemented");
+//    /**
+//     * Gets possible moves for a piece at the given location given an empty board
+//     *
+//     * @param pieceType the piece to get valid moves for
+//     * @return Set of possible moves for requested piece given an empty board, or null if no piece at
+//     * startPosition
+//     */
+//    public Collection<ChessMove> getPossibleMoves(ChessPiece.PieceType pieceType, ChessPosition piecePosition){
+//
+//        return possibleMoves;
+//    }
+
+    /**
+     * Gets a valid moves for a piece at the given location
+     *
+     * @param startPosition the piece to get valid moves for
+     * @return Set of valid moves for requested piece, or null if no piece at
+     * startPosition
+     */
+    public Collection<ChessMove> validMoves( ChessBoard board, ChessPosition startPosition) {
+        ChessPiece piece = board.getPiece(startPosition);
+        ChessPiece.PieceType type = piece.getPieceType();
+        Collection<ChessMove> validMoves = new ArrayList<>();
+
+        switch(type){
+            case KING:
+                Collection<ChessMove> potentialMoves = startPosition.KingMoves();
+                break;
+            case QUEEN:
+                // Calculate Queen moves
+                break;
+            case BISHOP:
+                break;
+            case KNIGHT:
+                break;
+            case ROOK:
+                break;
+            case PAWN:
+                break;
+            default:
+        }
+
+        // helper that get the pieces possible movements on an empty board.
+        //checks if the spots are valid.
+        //if valid, add to the collection
+        //return the collection
     }
 
     /**
@@ -52,10 +100,13 @@ public class ChessPiece {
      * @return Collection of valid moves
      */
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
+        Collection<ChessMove> piecemoves = new ArrayList<>();
+        Collection<ChessMove> possibleMovesOnAnEmptyBoard = validMoves(board, myPosition);
+        //check for moves on a playing board...
+        // loop through possibleMovesOnAnEmptyBoard
+        //check if the spots are already occupied.
 
-            throw new RuntimeException("Not implemented");
+        return piecemoves;
     }
 }
 
-// possible moves for each enum and the
-// in in the peicemoves function logic for checking if a oiece is in bounds and already there
