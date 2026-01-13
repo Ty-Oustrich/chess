@@ -52,7 +52,7 @@ public class ChessPosition {
 /// all piece moves
     public Collection<ChessMove> KingMoves() {
         int[][] allDirections = {{-1,-1},{-1,0}, {-1,1}, {0,-1}, {0,1}, {1,-1}, {1,0}, {1,1}};
-        Collection<ChessMove> possible_moves;
+        Collection<ChessMove> possible_moves = List<ChessPosition>;
 
         int currentRow = this.row;
         int currentCol = this.col;
@@ -60,7 +60,7 @@ public class ChessPosition {
             int x = allDirections[i][0];
             int y = allDirections[i][1];
             if (in_bounds(currentCol + x,currentRow + y)){
-            possible_moves.add(new ChessMove(this,new ChessPosition(currentCol+x currentRow+y), null));
+            possible_moves.add(new ChessMove(this,new ChessPosition(currentCol+x,currentRow+y), null));
             }
             return possible_moves;
         }
