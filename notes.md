@@ -1,6 +1,6 @@
 To-Do
 
-- [ ] ChessBoard
+- [x] ChessBoard
 - [ ] ChessGame
 - [x] ChessMove
 - [ ] ChessPiece

@@ -10,8 +10,7 @@ public class ChessBoard {
     ChessPiece[][] squares = new ChessPiece[8][8]; //2d array that holds type ChessPiece
 
     public ChessBoard() {
-
-        //call method to fill board with pieces?
+        resetBoard();
     }
 
     /**

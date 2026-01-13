@@ -9,16 +9,18 @@ import java.util.Collection;
  * signature of the existing methods.
  */
 public class ChessGame {
+    public static TeamColor TeamColor;
 
     public ChessGame() {
-
+        TeamColor = ChessGame.TeamColor.WHITE;
     }
+
 
     /**
      * @return Which team's turn it is
      */
     public TeamColor getTeamTurn() {
-        throw new RuntimeException("Not implemented");
+        return ChessGame.TeamColor;
     }
 
     /**
@@ -27,7 +29,7 @@ public class ChessGame {
      * @param team the team whose turn it is
      */
     public void setTeamTurn(TeamColor team) {
-        throw new RuntimeException("Not implemented");
+        TeamColor = team;
     }
 
     /**
@@ -39,6 +41,24 @@ public class ChessGame {
     }
 
     /**
+     * Gets possible moves for a piece at the given location given an empty board
+     *
+     * @param PieceType the piece to get valid moves for
+     * @return Set of possible moves for requested piece given an empty board, or null if no piece at
+     * startPosition
+     */
+    public Collection<ChessMove>getPossibleMoves(){
+        switch(value){
+            case:
+
+                break
+            
+        }
+        // gets the pieces possible movements on an empty board.
+        //returns the collection
+    }
+
+    /**
      * Gets a valid moves for a piece at the given location
      *
      * @param startPosition the piece to get valid moves for
@@ -47,6 +67,10 @@ public class ChessGame {
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
         throw new RuntimeException("Not implemented");
+        // helper that get the pieces possible movements on an empty board.
+        //checks if the spots are valid.
+        //if valid, add to the collection
+        //return the collection
     }
 
     /**
@@ -56,7 +80,7 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
-        throw new RuntimeException("Not implemented");
+        //
     }
 
     /**
