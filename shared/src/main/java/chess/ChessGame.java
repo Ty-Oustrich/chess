@@ -22,6 +22,7 @@ public class ChessGame {
      */
     public TeamColor getTeamTurn() {
         return ChessGame.TeamColor;
+        //this might need some work
     }
 
     /**
@@ -41,7 +42,35 @@ public class ChessGame {
         BLACK
     }
 
+    public Collection<ChessMove> validMoves(ChessBoard board, ChessPosition startPosition) {
+        ChessPiece piece = board.getPiece(startPosition);
+        ChessPiece.PieceType type = piece.getPieceType();
+        ChessGame.TeamColor color = getTeamTurn();
+        Collection<ChessMove> validMoves = new ArrayList<>();
+        validMoves = piece.pieceMoves(board, startPosition);
 
+        for(ChessMove move : validMoves) {
+        if(isInCheck() || occupiedBySameTeam(color) || pathBlocked()) {
+            validMoves.remove(move);
+            }
+        }
+
+
+            //checks if the spots are valid.
+            //to check if filled with team color, if blocked
+            //if valid, add to the collection
+            //return the collection
+    }
+
+    private boolean pathBlocked() {
+        //logic here or in the piecemoves function
+    }
+
+    private boolean occupiedBySameTeam(ChessGame.TeamColor color) {
+
+    }
+
+}
 
 
 
