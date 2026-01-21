@@ -1,8 +1,6 @@
 package chess;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
+import java.util.*;
 
 /**
  * Represents a single chess piece
@@ -17,6 +15,20 @@ public class ChessPiece {
     public ChessPiece(ChessGame.TeamColor pieceColor, ChessPiece.PieceType type) {
         this.pieceColor = pieceColor;
         this.type = type;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        ChessPiece that = (ChessPiece) o;
+        return Objects.equals(pieceColor, that.pieceColor) && type == that.type;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(pieceColor, type);
     }
 
     /**
@@ -35,7 +47,7 @@ public class ChessPiece {
      * @return Which team this chess piece belongs to
      */
     public ChessGame.TeamColor getTeamColor() {
-        return ChessGame.TeamColor;
+        return pieceColor;
     }
 
     /**
@@ -113,8 +125,8 @@ public class ChessPiece {
             while (inBounds(nextCol, nextRow)) {
                 ChessPosition move = new ChessPosition(nextRow, nextCol);
                 ChessPiece targetPiece = board.getPiece(move);
-                if (targetPiece != null) {
-                    if (targetPiece.pieceColor != currPiece.pieceColor) {
+                if (targetPiece != null) { //if piece is filled
+                    if (targetPiece.pieceColor != currPiece.pieceColor) { //if different color
                         possible_moves.add(new ChessMove(startPosition, move, null));
                     }
                     break;
@@ -131,47 +143,125 @@ public class ChessPiece {
      * @return Collection of bishop moves from the start position on an empty board.
      */
     public Collection<ChessMove> BishopMoves(ChessBoard board, ChessPosition startPosition) {
-        int[][] allDirections = {{-1,-1},{-1,0}, {-1,1}, {0,-1}, {0,1}, {1,-1}, {1,0}, {1,1}};
+        int[][] bishDirs = {{-1,-1}, {-1,1}, {1,-1}, {1,1}};
+        ChessPiece currPiece = board.getPiece(startPosition);
         Collection<ChessMove> possible_moves = new ArrayList<>();
 
         int currentRow = startPosition.getRow();
         int currentCol = startPosition.getColumn();
-        for(int i=1; i<8; i++){
-            int x = allDirections[i][0];
-            int y = allDirections[i][1];
-            if (inBounds(currentCol + x,currentRow + y)){
-                possible_moves.add(new ChessMove(startPosition,new ChessPosition(currentCol+x,currentRow+y), null));
+        for (int[] BDir : bishDirs) {
+            int x = BDir[0];
+            int y = BDir[1];
+            int nextCol = currentCol + x;
+            int nextRow = currentRow + y;
+            while (inBounds(nextCol, nextRow)) {
+                ChessPosition move = new ChessPosition(nextRow, nextCol);
+                ChessPiece targetPiece = board.getPiece(move);
+                if (targetPiece != null) {
+                    if (targetPiece.pieceColor != currPiece.pieceColor) {
+                        possible_moves.add(new ChessMove(startPosition, move, null));
+                    }
+                    break;
+                }
+                possible_moves.add(new ChessMove(startPosition, move, null));
+                nextCol += x;
+                nextRow += y;
             }
         }
         return possible_moves;
-    }
+        }
 
     /**
      * @return Collection of queen moves from the start position on an empty board.
      */
     public Collection<ChessMove> QueenMoves(ChessBoard board, ChessPosition startPosition) {
-        int[][] allDirections = {{-1,-1},{-1,0}, {-1,1}, {0,-1}, {0,1}, {1,-1}, {1,0}, {1,1}};
+        int[][] QueenDirs = {{-1,-1},{-1,0}, {-1,1}, {0,-1}, {0,1}, {1,-1}, {1,0}, {1,1}};
+        ChessPiece currPiece = board.getPiece(startPosition);
         Collection<ChessMove> possible_moves = new ArrayList<>();
 
         int currentRow = startPosition.getRow();
         int currentCol = startPosition.getColumn();
-        for(int i=1; i<8; i++){
-            int x = allDirections[i][0];
-            int y = allDirections[i][1];
-            if (inBounds(currentCol + x,currentRow + y)){
-                possible_moves.add(new ChessMove(startPosition,new ChessPosition(currentCol+x,currentRow+y), null));
+        for (int[] QDir : QueenDirs) {
+            int x = QDir[0];
+            int y = QDir[1];
+            int nextCol = currentCol + x;
+            int nextRow = currentRow + y;
+            while (inBounds(nextCol, nextRow)) {
+                ChessPosition move = new ChessPosition(nextRow, nextCol);
+                ChessPiece targetPiece = board.getPiece(move);
+                if (targetPiece != null) {
+                    if (targetPiece.pieceColor != currPiece.pieceColor) {
+                        possible_moves.add(new ChessMove(startPosition, move, null));
+                    }
+                    break;
+                }
+                possible_moves.add(new ChessMove(startPosition, move, null));
+                nextCol += x;
+                nextRow += y;
             }
         }
         return possible_moves;
     }
 
-    /**
-     * Calculates all the positions a chess piece can move to
-     * Does not take into account moves that are illegal due to leaving the king in
-     * danger
-     *
-     * @return Collection of valid moves
-     */
+    public Collection<ChessMove> KnightMoves(ChessBoard board, ChessPosition startPosition){
+        ChessPiece currPiece = board.getPiece(startPosition);
+        Collection<ChessMove> possible_moves = new ArrayList<>();
+        int[][] knightDirs = {{2,-1},{2,1}, {1,-2}, {-1,-2}, {-2,1}, {-2,-1}, {-1,2}, {1,2}};
+
+        for(int[] Kdir : knightDirs){
+            ChessPosition move = new ChessPosition(Kdir[0], Kdir[1]);
+            ChessPiece targetPiece = board.getPiece(move);
+            if(inBounds(Kdir[0],Kdir[1])){
+                if (targetPiece != null) { //if piece is filled
+                    if (targetPiece.pieceColor == currPiece.pieceColor) { //if same color
+                        continue;
+                    }
+                }
+                possible_moves.add(new ChessMove(startPosition, move, null));
+            }
+        }
+        return possible_moves;
+    }
+
+
+    public Collection<ChessMove> PawnMoves(ChessBoard board, ChessPosition startPosition) {
+        Collection<ChessMove> possible_moves = new ArrayList<>();
+        ChessPiece currPiece = board.getPiece(startPosition);
+        List<int[]> pawnDirs = new ArrayList<>();
+        pawnDirs.add(new int[]{1,0});
+        pawnDirs.add(new int[]{1,-1});
+        pawnDirs.add(new int[]{1,1});
+
+        //first move check
+        if ((currPiece.getTeamColor() == ChessGame.TeamColor.WHITE && startPosition.getColumn() == 1) ||
+                ((currPiece.getTeamColor() == ChessGame.TeamColor.BLACK && startPosition.getColumn() == 6))){
+            ChessPosition endpos = new ChessPosition(startPosition.getRow(), startPosition.getColumn() +2);
+            possible_moves.add(new ChessMove(startPosition, endpos, null));
+        }
+
+        //standard moves
+        for(int[] pDir : pawnDirs){
+            ChessPosition move = new ChessPosition(pDir[0], pDir[1]);
+            ChessPiece targetPiece = board.getPiece(move);
+            if(inBounds(pDir[0],pDir[1])){
+                if (targetPiece != null) { //if piece is filled
+                    if (targetPiece.pieceColor == currPiece.pieceColor) { //if same color
+                        continue;
+                    }
+                }
+                possible_moves.add(new ChessMove(startPosition, move, null));
+            }
+        }
+        return possible_moves;
+    }
+
+        /**
+         * Calculates all the positions a chess piece can move to
+         * Does not take into account moves that are illegal due to leaving the king in
+         * danger
+         *
+         * @return Collection of valid moves
+         */
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
         ChessPiece piece = board.getPiece(myPosition); //board
         ChessPiece.PieceType type = piece.getPieceType(); // piece type

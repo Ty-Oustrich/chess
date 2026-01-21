@@ -10,10 +10,10 @@ import java.util.Collection;
  * signature of the existing methods.
  */
 public class ChessGame {
-    public static TeamColor TeamColor;
+    private TeamColor TeamTurn;
 
     public ChessGame() {
-        TeamColor = ChessGame.TeamColor.WHITE;
+        this.TeamTurn = TeamColor.WHITE;
     }
 
 
@@ -21,7 +21,7 @@ public class ChessGame {
      * @return Which team's turn it is
      */
     public TeamColor getTeamTurn() {
-        return ChessGame.TeamColor;
+        return TeamTurn;
         //this might need some work
     }
 
@@ -31,7 +31,8 @@ public class ChessGame {
      * @param team the team whose turn it is
      */
     public void setTeamTurn(TeamColor team) {
-        TeamColor = team;
+
+        TeamTurn = team;
     }
 
     /**
@@ -42,7 +43,8 @@ public class ChessGame {
         BLACK
     }
 
-    public Collection<ChessMove> validMoves(ChessBoard board, ChessPosition startPosition) {
+    public Collection<ChessMove> validMoves(ChessPosition startPosition) {
+        ChessBoard board = getBoard();
         ChessPiece piece = board.getPiece(startPosition);
         ChessPiece.PieceType type = piece.getPieceType();
         ChessGame.TeamColor color = getTeamTurn();
@@ -70,7 +72,7 @@ public class ChessGame {
 
     }
 
-}
+
 
 
 
