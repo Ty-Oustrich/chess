@@ -225,37 +225,74 @@ public class ChessPiece {
 
 
     public Collection<ChessMove> PawnMoves(ChessBoard board, ChessPosition startPosition) {
-        Collection<ChessMove> possible_moves = new ArrayList<>();
-        ChessPiece currPiece = board.getPiece(startPosition);
-        List<int[]> pawnDirs = new ArrayList<>();
-        pawnDirs.add(new int[]{1,0});
-        pawnDirs.add(new int[]{1,-1});
-        pawnDirs.add(new int[]{1,1});
+        Collection<ChessMove> possible_moves = new ArrayList<>(); //arraylist of possible moves
+        ChessPiece currPiece = board.getPiece(startPosition); //current pawn object
+        ChessGame.TeamColor color = getTeamColor();
+        boolean promotionrow;
+        int moveDirection;
 
-        //first move check
-        if ((currPiece.getTeamColor() == ChessGame.TeamColor.WHITE && startPosition.getColumn() == 1) ||
-                ((currPiece.getTeamColor() == ChessGame.TeamColor.BLACK && startPosition.getColumn() == 6))){
-            ChessPosition endpos = new ChessPosition(startPosition.getRow(), startPosition.getColumn() +2);
-            possible_moves.add(new ChessMove(startPosition, endpos, null));
+        if(color == ChessGame.TeamColor.WHITE) {
+            moveDirection = 1;
+        } else {
+            moveDirection = -1;
         }
 
-        //standard moves
-        for(int[] pDir : pawnDirs){
-            ChessPosition move = new ChessPosition(pDir[0], pDir[1]);
-            ChessPiece targetPiece = board.getPiece(move);
-            if(inBounds(pDir[0],pDir[1])){
-                if (targetPiece != null) { //if piece is filled
-                    if (targetPiece.pieceColor == currPiece.pieceColor) { //if same color
-                        continue;
-                    }
-                }
+        if ((currPiece.getTeamColor() == ChessGame.TeamColor.WHITE && startPosition.getRow() == 7) ||
+                ((currPiece.getTeamColor() == ChessGame.TeamColor.BLACK && startPosition.getRow() == 2))){
+            promotionrow = true;
+        }
+        else{
+            promotionrow = false;
+        }
+
+        //standard moves check
+
+        ChessPosition move = new ChessPosition(startPosition.getRow() + moveDirection, startPosition.getColumn() );
+        ChessPiece targetPiece = board.getPiece(move);
+        if(inBounds(startPosition.getRow() + moveDirection, startPosition.getColumn())){
+            if (targetPiece == null) { //if piece is empty
+                addMoveswithPromotionRowCheck(startPosition, possible_moves, promotionrow, move);
                 possible_moves.add(new ChessMove(startPosition, move, null));
             }
         }
-        return possible_moves;
+
+        //first move check (double move)
+        if ((currPiece.getTeamColor() == ChessGame.TeamColor.WHITE && startPosition.getRow() == 2) ||
+                ((currPiece.getTeamColor() == ChessGame.TeamColor.BLACK && startPosition.getRow() == 7))){
+            if(inBounds(startPosition.getRow() + moveDirection *2, startPosition.getColumn())){
+                ChessPosition endpos = new ChessPosition(startPosition.getRow() + moveDirection *2, startPosition.getColumn());
+                possible_moves.add(new ChessMove(startPosition, endpos, null));
+            }
+        }
+        //capture moves
+        ChessPosition diagL = new ChessPosition(moveDirection, -1);
+        ChessPosition diagR = new ChessPosition(moveDirection, 1);
+        ChessPiece L = board.getPiece(diagL);
+        ChessPiece R = board.getPiece(diagR);
+        if(L.getTeamColor()!= color){
+            addMoveswithPromotionRowCheck(startPosition, possible_moves, promotionrow, diagL);
+        }
+        if(R.getTeamColor()!= color){
+            addMoveswithPromotionRowCheck(startPosition, possible_moves, promotionrow, diagR);
+        }
+
+            return possible_moves;
     }
 
-        /**
+    private void addMoveswithPromotionRowCheck(ChessPosition startPosition, Collection<ChessMove> possible_moves, boolean promotionrow, ChessPosition proposedPosition) {
+        ChessMove proposedMove = new ChessMove(startPosition, proposedPosition, null);
+        if (promotionrow) {
+            possible_moves.add(new ChessMove(startPosition, proposedPosition, PieceType.QUEEN));
+            possible_moves.add(new ChessMove(startPosition, proposedPosition, PieceType.BISHOP));
+            possible_moves.add(new ChessMove(startPosition, proposedPosition, PieceType.KNIGHT));
+            possible_moves.add(new ChessMove(startPosition, proposedPosition, PieceType.ROOK));
+        } else {
+            possible_moves.add(proposedMove);
+        }
+    }
+
+
+    /**
          * Calculates all the positions a chess piece can move to
          * Does not take into account moves that are illegal due to leaving the king in
          * danger
