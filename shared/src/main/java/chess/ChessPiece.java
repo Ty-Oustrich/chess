@@ -291,15 +291,14 @@ public class ChessPiece {
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
         ChessPiece piece = board.getPiece(myPosition); //board
         ChessPiece.PieceType type = piece.getPieceType(); // piece type
-        Collection<ChessMove> pieceMovesOnAnEmptyBoard = new ArrayList<>();
 
         return switch (type) {
-            case KING ->  pieceMovesOnAnEmptyBoard = KingMoves(board, myPosition);
-            case QUEEN -> pieceMovesOnAnEmptyBoard = QueenMoves(board, myPosition);
-            case BISHOP -> pieceMovesOnAnEmptyBoard = BishopMoves(board, myPosition);
-            case KNIGHT -> pieceMovesOnAnEmptyBoard = KnightMoves(board, myPosition);
-            case ROOK -> pieceMovesOnAnEmptyBoard = RookMoves(board, myPosition);
-            case PAWN -> pieceMovesOnAnEmptyBoard = PawnMoves(board, myPosition);
+            case KING ->  KingMoves(board, myPosition);
+            case QUEEN -> QueenMoves(board, myPosition);
+            case BISHOP -> BishopMoves(board, myPosition);
+            case KNIGHT -> KnightMoves(board, myPosition);
+            case ROOK -> RookMoves(board, myPosition);
+            case PAWN -> PawnMoves(board, myPosition);
 
 
         };

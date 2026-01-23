@@ -46,24 +46,25 @@ public class ChessGame {
     }
 
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
-        ChessBoard board = getBoard();
-        ChessPiece piece = board.getPiece(startPosition);
-        TeamColor color = getTeamTurn();
-        Collection<ChessMove> validMoves = new ArrayList<>();
-        validMoves = piece.pieceMoves(board, startPosition);
+        ChessPiece startPiece = board.getPiece(startPosition);
+        TeamColor color = startPiece.getTeamColor();
+        if(startPiece.getPieceType() == null) {return null;}
+        Collection<ChessMove> validMoves = startPiece.pieceMoves(board, startPosition);
+        Collection<ChessMove> removeThese = new ArrayList<>();
 
         for(ChessMove move : validMoves) {
-        if(isInCheck() || occupiedBySameTeam(color) || pathBlocked()) {
-            validMoves.remove(move);
+            ChessPiece temp = board.getPiece(move.getEndPosition());
+            board.addPiece(move.getEndPosition(),startPiece);
+            board.addPiece(startPosition, null);
+            if(isInCheck(color)){
+            removeThese.add(move);
             }
+            board.addPiece(move.getEndPosition(),temp);
+            board.addPiece(startPosition,startPiece);
+
         }
-
-
-            //checks if the spots are valid.
-            //to check if filled with team color, if blocked
-            //if valid, add to the collection
-            //return the collection
-        return
+        validMoves.removeAll(removeThese);
+        return validMoves;
     }
 
 
@@ -79,7 +80,7 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
-        //
+        boolean getTeamTurn;
     }
 
     /**
@@ -130,7 +131,7 @@ public class ChessGame {
      * @return True if the specified team is in checkmate
      */
     public boolean isInCheckmate(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+    return(isInCheck(teamColor) && isInStalemate(teamColor));
     }
 
     /**
@@ -143,7 +144,7 @@ public class ChessGame {
     public boolean isInStalemate(TeamColor teamColor) {
         if(isInCheck(teamColor)){return false;}
 
-        //for ally pieces
+        //for friendly pieces
         for(int row = 1; row <= 8; row++){
             for(int col = 1; col <= 8; col++){
                 ChessPosition pos = new ChessPosition(row, col);

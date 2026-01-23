@@ -13,7 +13,6 @@ public class ChessBoard {
     ChessPiece[][] squares = new ChessPiece[8][8]; //2d array that holds type ChessPiece
 
     public ChessBoard() {
-        resetBoard();
     }
 
     /**
