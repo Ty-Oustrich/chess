@@ -12,9 +12,11 @@ import java.util.Objects;
  */
 public class ChessGame {
     private TeamColor TeamTurn;
+    private ChessBoard board;
 
     public ChessGame() {
-        this.TeamTurn = TeamColor.WHITE;
+        setTeamTurn(TeamColor.WHITE); //always first
+        board = new ChessBoard();
     }
 
 
@@ -32,7 +34,6 @@ public class ChessGame {
      * @param team the team whose turn it is
      */
     public void setTeamTurn(TeamColor team) {
-
         TeamTurn = team;
     }
 
@@ -47,8 +48,7 @@ public class ChessGame {
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
         ChessBoard board = getBoard();
         ChessPiece piece = board.getPiece(startPosition);
-        ChessPiece.PieceType type = piece.getPieceType();
-        ChessGame.TeamColor color = getTeamTurn();
+        TeamColor color = getTeamTurn();
         Collection<ChessMove> validMoves = new ArrayList<>();
         validMoves = piece.pieceMoves(board, startPosition);
 
@@ -63,15 +63,10 @@ public class ChessGame {
             //to check if filled with team color, if blocked
             //if valid, add to the collection
             //return the collection
+        return
     }
 
-    private boolean pathBlocked() {
-        //logic here or in the piecemoves function
-    }
 
-    private boolean occupiedBySameTeam(ChessGame.TeamColor color) {
-
-    }
 
 
 
@@ -93,8 +88,39 @@ public class ChessGame {
      * @param teamColor which team to check for check
      * @return True if the specified team is in check
      */
-    public boolean isInCheck(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+    public boolean isInCheck(TeamColor teamColor) { //can also place a queen and knight in the kings place then check if they can take any piece?? if this doesnt work?
+        ChessPosition Kposition = null;
+        ChessPiece Kpiece;
+        Collection<ChessPosition> enemyPieces = new ArrayList<>();
+        //find king
+        for(int row = 1; row <= 8; row++){
+            for(int col = 1; col <= 8; col++){
+                ChessPosition pos = new ChessPosition(row, col);
+                ChessPiece piece = board.getPiece(pos);
+                if(piece == null){continue;}
+                if(piece.getTeamColor() == teamColor && piece.getPieceType() == ChessPiece.PieceType.KING){
+                    Kposition = new ChessPosition(row, col);
+                }
+            }
+        }
+        //find all enemy pieces
+        for(int row = 1; row <= 8; row++){
+            for(int col = 1; col <= 8; col++){
+                ChessPosition pos = new ChessPosition(row, col);
+                ChessPiece piece = board.getPiece(pos);
+                if(piece == null){continue;}
+                if(piece.getTeamColor() != teamColor){
+                enemyPieces.add(new ChessPosition(row,col));
+
+                for(ChessMove potentialCheckMove : piece.pieceMoves(board, new ChessPosition(row, col))){
+                   if(potentialCheckMove.getEndPosition() == Kposition){
+                       return true;
+                   }
+                }
+                }
+            }
+        }
+        return false;
     }
 
     /**
@@ -115,7 +141,21 @@ public class ChessGame {
      * @return True if the specified team is in stalemate, otherwise false
      */
     public boolean isInStalemate(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+        if(isInCheck(teamColor)){return false;}
+
+        //for ally pieces
+        for(int row = 1; row <= 8; row++){
+            for(int col = 1; col <= 8; col++){
+                ChessPosition pos = new ChessPosition(row, col);
+                ChessPiece piece = board.getPiece(pos);
+                if(piece != null && piece.getTeamColor() == teamColor){  //for ally pieces
+                    if(!validMoves(pos).isEmpty()){
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     /**
@@ -124,7 +164,7 @@ public class ChessGame {
      * @param board the new board to use
      */
     public void setBoard(ChessBoard board) {
-
+        this.board = board;
         board.resetBoard();
     }
 
@@ -134,7 +174,7 @@ public class ChessGame {
      * @return the chessboard
      */
     public ChessBoard getBoard() {
-        return new ChessBoard();
+        return board;
     }
 
     @Override

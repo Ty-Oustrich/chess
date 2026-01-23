@@ -57,28 +57,9 @@ public class ChessPiece {
         return type;
     }
 
-//    /**
-//     * Gets possible moves for a piece at the given location given an empty board
-//     *
-//     * @param pieceType the piece to get valid moves for
-//     * @return Set of possible moves for requested piece given an empty board, or null if no piece at
-//     * startPosition
-//     */
-//    public Collection<ChessMove> getPossibleMoves(ChessPiece.PieceType pieceType, ChessPosition piecePosition){
-//
-//        return possibleMoves;
-//    }
 
-    /**
-     * Gets a valid moves for a piece at the given location
-     *
-     * @param startPosition the piece to get valid moves for
-     * @return Set of valid moves for requested piece, or null if no piece at
-     * startPosition
-     */
-    /**
-     * @return Set of valid moves for requested piece, or null if no piece at startPosition
-     */
+
+
 
 
     /**
@@ -97,11 +78,16 @@ public class ChessPiece {
 
         int currentRow = startPosition.getRow();
         int currentCol = startPosition.getColumn();
-        for(int i=1; i<8; i++){
+        for(int i=0; i<8; i++){
             int x = allDirections[i][0];
             int y = allDirections[i][1];
             if (inBounds(currentCol + x,currentRow + y)){
-                possible_moves.add(new ChessMove(startPosition,new ChessPosition(currentCol+x,currentRow+y), null));
+                ChessPosition move = new ChessPosition(currentRow + y, currentCol + x);
+                ChessPiece targetPiece = board.getPiece(move);
+                if (targetPiece != null && targetPiece.getTeamColor() == getTeamColor()) {
+                    continue;
+                }
+                possible_moves.add(new ChessMove(startPosition, move, null));
             }
         }
         return possible_moves;
@@ -209,15 +195,17 @@ public class ChessPiece {
         int[][] knightDirs = {{2,-1},{2,1}, {1,-2}, {-1,-2}, {-2,1}, {-2,-1}, {-1,2}, {1,2}};
 
         for(int[] Kdir : knightDirs){
-            ChessPosition move = new ChessPosition(Kdir[0], Kdir[1]);
-            ChessPiece targetPiece = board.getPiece(move);
-            if(inBounds(Kdir[0],Kdir[1])){
+            int nextRow = startPosition.getRow() + Kdir[0];
+            int nextCol = startPosition.getColumn() + Kdir[1];
+            if(inBounds(nextCol,nextRow)){
+                ChessPosition endpos = new ChessPosition(nextRow, nextCol);
+                ChessPiece targetPiece = board.getPiece(endpos);
                 if (targetPiece != null) { //if piece is filled
                     if (targetPiece.pieceColor == currPiece.pieceColor) { //if same color
                         continue;
                     }
                 }
-                possible_moves.add(new ChessMove(startPosition, move, null));
+                possible_moves.add(new ChessMove(startPosition, endpos, null));
             }
         }
         return possible_moves;
@@ -237,13 +225,8 @@ public class ChessPiece {
             moveDirection = -1;
         }
 
-        if ((currPiece.getTeamColor() == ChessGame.TeamColor.WHITE && startPosition.getRow() == 7) ||
-                ((currPiece.getTeamColor() == ChessGame.TeamColor.BLACK && startPosition.getRow() == 2))){
-            promotionrow = true;
-        }
-        else{
-            promotionrow = false;
-        }
+        promotionrow = (currPiece.getTeamColor() == ChessGame.TeamColor.WHITE && startPosition.getRow() == 7) ||
+                ((currPiece.getTeamColor() == ChessGame.TeamColor.BLACK && startPosition.getRow() == 2));
 
         //standard moves check
 
@@ -265,15 +248,21 @@ public class ChessPiece {
             }
         }
         //capture moves
-        ChessPosition diagL = new ChessPosition(moveDirection, -1);
-        ChessPosition diagR = new ChessPosition(moveDirection, 1);
-        ChessPiece L = board.getPiece(diagL);
-        ChessPiece R = board.getPiece(diagR);
-        if(L.getTeamColor()!= color){
-            addMoveswithPromotionRowCheck(startPosition, possible_moves, promotionrow, diagL);
+        ChessPosition diagL = new ChessPosition(startPosition.getRow() + moveDirection, startPosition.getColumn() - 1);
+        ChessPosition diagR = new ChessPosition(startPosition.getRow() + moveDirection, startPosition.getColumn() + 1);
+        
+        if (inBounds(diagL.getColumn(), diagL.getRow())) {
+            ChessPiece L = board.getPiece(diagL);
+            if(L != null && L.getTeamColor()!= color){
+                addMoveswithPromotionRowCheck(startPosition, possible_moves, promotionrow, diagL);
+            }
         }
-        if(R.getTeamColor()!= color){
-            addMoveswithPromotionRowCheck(startPosition, possible_moves, promotionrow, diagR);
+        
+        if (inBounds(diagR.getColumn(), diagR.getRow())) {
+            ChessPiece R = board.getPiece(diagR);
+            if(R != null && R.getTeamColor()!= color){
+                addMoveswithPromotionRowCheck(startPosition, possible_moves, promotionrow, diagR);
+            }
         }
 
             return possible_moves;
