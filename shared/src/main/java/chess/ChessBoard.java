@@ -55,7 +55,7 @@ public class ChessBoard {
         clearBoard();
         //piece in every position
         //Pawns
-        for(int i = 0; i <7; i++ ){
+        for(int i = 0; i < 8; i++ ){
                 squares[1][i] = new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN );
                 squares[6][i] = new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.PAWN );
         }
