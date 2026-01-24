@@ -6,6 +6,8 @@ To-Do
 - [ ] ChessPiece
 - [x] ChessPosition
 
+== is working but I realize I might need to switch to the method
+
 
 
 # tips relevant right now

@@ -91,7 +91,6 @@ public class ChessGame {
      */
     public boolean isInCheck(TeamColor teamColor) { //can also place a queen and knight in the kings place then check if they can take any piece?? if this doesnt work?
         ChessPosition Kposition = null;
-        ChessPiece Kpiece;
         Collection<ChessPosition> enemyPieces = new ArrayList<>();
         //find king
         for(int row = 1; row <= 8; row++){
@@ -142,7 +141,7 @@ public class ChessGame {
      * @return True if the specified team is in stalemate, otherwise false
      */
     public boolean isInStalemate(TeamColor teamColor) {
-        if(isInCheck(teamColor)){return false;}
+        if(isInCheck(teamColor)){return false;} ///this could be problematic for the checkmate scenario but all the tests passed...
 
         //for friendly pieces
         for(int row = 1; row <= 8; row++){
