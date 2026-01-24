@@ -57,11 +57,6 @@ public class ChessPiece {
         return type;
     }
 
-
-
-
-
-
     /**
      * @return true if the proposed row/col is within board bounds.
      */
@@ -231,20 +226,19 @@ public class ChessPiece {
         //standard moves check
 
         ChessPosition move = new ChessPosition(startPosition.getRow() + moveDirection, startPosition.getColumn() );
-        ChessPiece targetPiece = board.getPiece(move);
-        if(inBounds(startPosition.getRow() + moveDirection, startPosition.getColumn())){
+        if(inBounds(move.getColumn(), move.getRow())){
+            ChessPiece targetPiece = board.getPiece(move);
             if (targetPiece == null) { //if piece is empty
                 addMoveswithPromotionRowCheck(startPosition, possible_moves, promotionrow, move);
-                possible_moves.add(new ChessMove(startPosition, move, null));
-            }
-        }
-
-        //first move check (double move)
-        if ((currPiece.getTeamColor() == ChessGame.TeamColor.WHITE && startPosition.getRow() == 2) ||
-                ((currPiece.getTeamColor() == ChessGame.TeamColor.BLACK && startPosition.getRow() == 7))){
-            if(inBounds(startPosition.getRow() + moveDirection *2, startPosition.getColumn())){
-                ChessPosition endpos = new ChessPosition(startPosition.getRow() + moveDirection *2, startPosition.getColumn());
-                possible_moves.add(new ChessMove(startPosition, endpos, null));
+                
+                //first move check (double move)
+                if ((currPiece.getTeamColor() == ChessGame.TeamColor.WHITE && startPosition.getRow() == 2) ||
+                        ((currPiece.getTeamColor() == ChessGame.TeamColor.BLACK && startPosition.getRow() == 7))){
+                    ChessPosition endpos = new ChessPosition(startPosition.getRow() + moveDirection * 2, startPosition.getColumn());
+                    if(inBounds(endpos.getColumn(), endpos.getRow()) && board.getPiece(endpos) == null){
+                        possible_moves.add(new ChessMove(startPosition, endpos, null));
+                    }
+                }
             }
         }
         //capture moves
