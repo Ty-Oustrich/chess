@@ -17,6 +17,7 @@ public class ChessGame {
     public ChessGame() {
         setTeamTurn(TeamColor.WHITE); //always first
         board = new ChessBoard();
+        board.resetBoard();
     }
 
 
@@ -80,7 +81,11 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
+
         ChessPosition start = move.getStartPosition();
+        if(board.getPiece(start) == null){
+            throw new InvalidMoveException("cannot move a nul piece");
+        }
         ChessPosition end = move.getEndPosition();
 
         ChessPiece piece = board.getPiece(start);
