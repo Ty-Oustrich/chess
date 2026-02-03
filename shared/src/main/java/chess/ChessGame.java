@@ -80,7 +80,34 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
-        boolean getTeamTurn;
+        ChessPosition start = move.getStartPosition();
+        ChessPosition end = move.getEndPosition();
+
+        ChessPiece piece = board.getPiece(start);
+        ChessGame.TeamColor color = piece.getTeamColor();
+
+        if(getTeamTurn() != color){
+            throw new InvalidMoveException("Incorrect move turn");
+        }
+        Collection<ChessMove> valid = validMoves(start); //valid moves
+        if (!valid.contains(move)) {
+            throw new InvalidMoveException("Impossible move");
+        }
+
+        if (move.getPromotionPiece() != null) {
+            ChessPiece promotedPiece = new ChessPiece(getTeamTurn(), move.getPromotionPiece());
+            board.addPiece(end, promotedPiece);
+            board.addPiece(start, null);
+        } else {
+            board.addPiece(end, piece);
+            board.addPiece(start, null);
+
+        }
+        if (getTeamTurn() == TeamColor.WHITE) {
+            setTeamTurn(TeamColor.BLACK);
+        } else {
+            setTeamTurn(TeamColor.WHITE);
+        }
     }
 
     /**
@@ -177,17 +204,20 @@ public class ChessGame {
         return board;
     }
 
+
+
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
         ChessGame chessGame = (ChessGame) o;
-        return TeamTurn == chessGame.TeamTurn;
+        return TeamTurn == chessGame.TeamTurn && Objects.equals(board, chessGame.board);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(TeamTurn);
+        return Objects.hash(TeamTurn, board);
     }
 }

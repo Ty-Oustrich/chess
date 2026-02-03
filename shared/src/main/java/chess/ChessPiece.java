@@ -22,8 +22,8 @@ public class ChessPiece {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        ChessPiece that = (ChessPiece) o;
-        return Objects.equals(pieceColor, that.pieceColor) && type == that.type;
+        ChessPiece piece = (ChessPiece) o;
+        return pieceColor == piece.pieceColor && type == piece.type;
     }
 
     @Override
@@ -87,6 +87,91 @@ public class ChessPiece {
         }
         return possible_moves;
     }
+
+
+
+
+public Collection<ChessMove> QueenMoves(ChessBoard board, ChessPosition startPosition){
+    Collection<ChessMove> possibleMoves = new ArrayList<>();
+    int[][] kdirs = {{-1,-1},{-1,0},{-1,1},{0,-1},{0,1},{1,-1},{1,0},{1,1}};
+    int startrow = startPosition.getRow();
+    int startcol = startPosition.getColumn();
+    ChessPiece startPiece = board.getPiece(startPosition);
+
+    for(int i = 0; i<8; i++) {
+        int row = kdirs[i][0];
+        int col = kdirs[i][1];
+        int nextrow = startrow + row;
+        int nextcol = startcol + col;
+        while (inBounds(nextcol, nextrow)){
+            ChessPosition enpos = new ChessPosition(nextrow, nextcol);
+            ChessMove endmove = new ChessMove(startPosition, enpos, null);
+            ChessPiece endpiece = board.getPiece(enpos);
+            if(endpiece != null) {
+                if(startPiece.getTeamColor() != endpiece.getTeamColor()){
+                    possibleMoves.add(endmove);
+                }
+                break;
+            }
+            possibleMoves.add(endmove);
+            nextrow += row;
+            nextcol+= col;
+        }
+    }
+    return possibleMoves;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//public Collection<ChessMove> QueenMoves(ChessBoard board, ChessPosition startPosition) {
+//    int[][] QueenDirs = {{-1,-1},{-1,0}, {-1,1}, {0,-1}, {0,1}, {1,-1}, {1,0}, {1,1}};
+//    ChessPiece currPiece = board.getPiece(startPosition);
+//    Collection<ChessMove> possible_moves = new ArrayList<>();
+//
+//    int currentRow = startPosition.getRow();
+//    int currentCol = startPosition.getColumn();
+//    for (int[] QDir : QueenDirs) {
+//        int x = QDir[0];
+//        int y = QDir[1];
+//        int nextCol = currentCol + x;
+//        int nextRow = currentRow + y;
+//        while (inBounds(nextCol, nextRow)) {
+//            ChessPosition move = new ChessPosition(nextRow, nextCol);
+//            ChessPiece targetPiece = board.getPiece(move);
+//            if (targetPiece != null) {
+//                if (targetPiece.pieceColor != currPiece.pieceColor) {
+//                    possible_moves.add(new ChessMove(startPosition, move, null));
+//                }
+//                break;
+//            }
+//            possible_moves.add(new ChessMove(startPosition, move, null));
+//            nextCol += x;
+//            nextRow += y;
+//        }
+//    }
+//    return possible_moves;
+//}
+//
+//
+
+
+
+
+
+
 
     /**
      * @return Collection of rook moves from the start position on an empty board.
@@ -155,34 +240,34 @@ public class ChessPiece {
     /**
      * @return Collection of queen moves from the start position on an empty board.
      */
-    public Collection<ChessMove> QueenMoves(ChessBoard board, ChessPosition startPosition) {
-        int[][] QueenDirs = {{-1,-1},{-1,0}, {-1,1}, {0,-1}, {0,1}, {1,-1}, {1,0}, {1,1}};
-        ChessPiece currPiece = board.getPiece(startPosition);
-        Collection<ChessMove> possible_moves = new ArrayList<>();
-
-        int currentRow = startPosition.getRow();
-        int currentCol = startPosition.getColumn();
-        for (int[] QDir : QueenDirs) {
-            int x = QDir[0];
-            int y = QDir[1];
-            int nextCol = currentCol + x;
-            int nextRow = currentRow + y;
-            while (inBounds(nextCol, nextRow)) {
-                ChessPosition move = new ChessPosition(nextRow, nextCol);
-                ChessPiece targetPiece = board.getPiece(move);
-                if (targetPiece != null) {
-                    if (targetPiece.pieceColor != currPiece.pieceColor) {
-                        possible_moves.add(new ChessMove(startPosition, move, null));
-                    }
-                    break;
-                }
-                possible_moves.add(new ChessMove(startPosition, move, null));
-                nextCol += x;
-                nextRow += y;
-            }
-        }
-        return possible_moves;
-    }
+//     public Collection<ChessMove> QueenMoves(ChessBoard board, ChessPosition startPosition) {
+//         int[][] QueenDirs = {{-1,-1},{-1,0}, {-1,1}, {0,-1}, {0,1}, {1,-1}, {1,0}, {1,1}};
+//         ChessPiece currPiece = board.getPiece(startPosition);
+//         Collection<ChessMove> possible_moves = new ArrayList<>();
+//
+//         int currentRow = startPosition.getRow();
+//         int currentCol = startPosition.getColumn();
+//         for (int[] QDir : QueenDirs) {
+//             int x = QDir[0];
+//             int y = QDir[1];
+//             int nextCol = currentCol + x;
+//             int nextRow = currentRow + y;
+//             while (inBounds(nextCol, nextRow)) {
+//                 ChessPosition move = new ChessPosition(nextRow, nextCol);
+//                 ChessPiece targetPiece = board.getPiece(move);
+//                 if (targetPiece != null) {
+//                     if (targetPiece.pieceColor != currPiece.pieceColor) {
+//                         possible_moves.add(new ChessMove(startPosition, move, null));
+//                     }
+//                     break;
+//                 }
+//                 possible_moves.add(new ChessMove(startPosition, move, null));
+//                 nextCol += x;
+//                 nextRow += y;
+//             }
+//         }
+//         return possible_moves;
+//     }
 
     public Collection<ChessMove> KnightMoves(ChessBoard board, ChessPosition startPosition){
         ChessPiece currPiece = board.getPiece(startPosition);
