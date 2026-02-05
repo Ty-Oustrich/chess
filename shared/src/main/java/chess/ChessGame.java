@@ -162,7 +162,7 @@ public class ChessGame {
      * @return True if the specified team is in checkmate
      */
     public boolean isInCheckmate(TeamColor teamColor) {
-    return(isInCheck(teamColor) && isInStalemate(teamColor));
+        return isInCheck(teamColor) && teamHasNoMoves(teamColor);
     }
 
     /**
@@ -173,14 +173,16 @@ public class ChessGame {
      * @return True if the specified team is in stalemate, otherwise false
      */
     public boolean isInStalemate(TeamColor teamColor) {
-        if(isInCheck(teamColor)){return false;} ///this could be problematic for the checkmate scenario but all the tests passed...
-
-        //for friendly pieces
+        if(isInCheck(teamColor)){return false;}
+        return teamHasNoMoves(teamColor);
+    }
+//find all pieces of color and check for moves any valid
+    private boolean teamHasNoMoves(TeamColor teamColor) { 
         for(int row = 1; row <= 8; row++){
             for(int col = 1; col <= 8; col++){
                 ChessPosition pos = new ChessPosition(row, col);
                 ChessPiece piece = board.getPiece(pos);
-                if(piece != null && piece.getTeamColor() == teamColor){  //for ally pieces
+                if(piece != null && piece.getTeamColor() == teamColor){
                     if(!validMoves(pos).isEmpty()){
                         return false;
                     }
