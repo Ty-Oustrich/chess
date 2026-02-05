@@ -145,7 +145,7 @@ public class ChessGame {
                 enemyPieces.add(new ChessPosition(row,col));
 
                 for(ChessMove potentialCheckMove : piece.pieceMoves(board, new ChessPosition(row, col))){
-                   if(potentialCheckMove.getEndPosition() == Kposition){
+                   if(potentialCheckMove.getEndPosition().equals(Kposition)){
                        return true;
                    }
                 }
