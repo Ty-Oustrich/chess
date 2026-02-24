@@ -13,3 +13,4 @@ out/
 server/**/db.properties
 
 commit-notes.txt
+personal-notes.md
