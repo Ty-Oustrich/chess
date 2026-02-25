@@ -1,11 +1,9 @@
 package handler;
 
 public class LoginHandler {
-    LoginRequest request = (LoginRequest)gson.fromJson(reqData, LoginRequest.class);
-
-LoginService service = new LoginService();
-LoginResult result = service.login(request);
-
-return gson.toJson(result);
 
 }
+
+//translates HTTP POST /session requests into LoginRequest objects
+// passes request to UserService.login() and serializes the result back to JSON
+ //returns 200 with authToken on success or 401 500 on failure
