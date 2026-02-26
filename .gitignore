@@ -14,3 +14,4 @@ server/**/db.properties
 
 commit-notes.txt
 personal-notes.md
+sequence-diagrams.txt
