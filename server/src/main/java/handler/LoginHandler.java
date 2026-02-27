@@ -7,7 +7,8 @@ import io.javalin.http.Context;
 import io.javalin.http.Handler;
 import service.LoginRequest;
 import service.UserService;
-import java.util.Map;
+import service.LoginResult;
+
 
 public class LoginHandler {
     private final UserService userService;
@@ -53,7 +54,7 @@ public class LoginHandler {
     
         ctx.json(errorResponse);
     }
-
+    record ErrorResponse(String message) {}
 }
 
 //translates HTTP POST /session requests into LoginRequest objects
