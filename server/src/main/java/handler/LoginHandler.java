@@ -2,12 +2,12 @@ package handler;
 
 
 import com.google.gson.Gson;
-import dataaccess.DataAccessException;
 import io.javalin.http.Context;
-import io.javalin.http.Handler;
+import service.BadRequestException;
 import service.LoginRequest;
-import service.UserService;
 import service.LoginResult;
+import service.UnauthorizedException;
+import service.UserService;
 
 
 public class LoginHandler {
@@ -23,8 +23,12 @@ public class LoginHandler {
             LoginRequest request = gson.fromJson(ctx.body(), LoginRequest.class);
             LoginResult result = userService.login(request);
             sendSuccess(ctx, result);
-        } catch (DataAccessException e) {
-            sendError(ctx, e);
+        } catch (BadRequestException e) {
+            ctx.status(400);
+            ctx.json(new ErrorResponse("Error:incorrect request"));
+        } catch (UnauthorizedException e) {
+            ctx.status(401);
+            ctx.json(new ErrorResponse("Error:unauthorized"));
         } catch (Exception e) {
             sendUnexpectedError(ctx, e);
         }
@@ -42,18 +46,6 @@ public class LoginHandler {
         ctx.json(errorResponse);
     }
 
-    private void sendError(Context ctx, DataAccessException e) {
-        String errorMessage = e.getMessage();
-        ErrorResponse errorResponse = new ErrorResponse(errorMessage);
-    
-        if (errorMessage.equals("Error: unauthorized")) {
-            ctx.status(401);
-        } else {
-            ctx.status(500);
-        }
-    
-        ctx.json(errorResponse);
-    }
     record ErrorResponse(String message) {}
 }
 

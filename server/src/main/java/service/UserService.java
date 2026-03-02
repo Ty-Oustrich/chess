@@ -13,21 +13,25 @@ public class UserService {
         this.dataAccess = dataAccess;
     }
 
-    public LoginResult login(LoginRequest request) throws DataAccessException {
-        UserData user = dataAccess.getUser(request.username());
+    public LoginResult login(LoginRequest request) throws DataAccessException, BadRequestException, UnauthorizedException {
+        String username = request.username();
+        String password = request.password();
 
-        if (user == null) {
-            throw new DataAccessException("Error: username was wrong");
+        if (username == null || username.isBlank() || password == null || password.isBlank()) {
+            throw new BadRequestException();
         }
-        if (!user.password().equals(request.password())) {
-            throw new DataAccessException("Error: password was wrong");
+
+        UserData user = dataAccess.getUser(username);
+
+        if (user == null || !user.password().equals(password)) {
+            throw new UnauthorizedException();
         }
 
         String token = UUID.randomUUID().toString();
-        String username = user.username();
-        AuthData authData = new AuthData(token, username);
+        String userNameForToken = user.username();
+        AuthData authData = new AuthData(token, userNameForToken);
         dataAccess.createAuth(authData);
-        
-        return new LoginResult(username, token);
+
+        return new LoginResult(userNameForToken, token);
     }
 }

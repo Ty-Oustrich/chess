@@ -1,6 +1,5 @@
 package service;
 
-import dataaccess.DataAccessException;
 import dataaccess.MemoryDataAccess;
 import model.AuthData;
 import model.UserData;
@@ -31,20 +30,20 @@ public class UserServiceTest {
     }
 
     @Test
-    public void loginUnknownUserThrowsExpectedException() {
+    public void loginUnknownUserThrowsExpectedException() throws Exception {
         MemoryDataAccess dataAccess = new MemoryDataAccess();
         UserService userService = new UserService(dataAccess);
 
         try {
             userService.login(new LoginRequest("missing-user", "secret123"));
-            fail("Expected DataAccessException to be thrown");
-        } catch (DataAccessException e) {
-            assertEquals("Error: username was wrong", e.getMessage());
+            fail("Expected UnauthorizedException to be thrown");
+        } catch (UnauthorizedException e) {
+            assertNotNull(e);
         }
     }
 
     @Test
-    public void loginWrongPasswordThrowsExpectedException() {
+    public void loginWrongPasswordThrowsExpectedException() throws Exception {
         MemoryDataAccess dataAccess = new MemoryDataAccess();
         String username = "chess-user";
         dataAccess.createUser(new UserData(username, "correct-password", "user@example.com"));
@@ -52,9 +51,9 @@ public class UserServiceTest {
 
         try {
             userService.login(new LoginRequest(username, "wrong-password"));
-            fail("Expected DataAccessException to be thrown");
-        } catch (DataAccessException e) {
-            assertEquals("Error: password was wrong", e.getMessage());
+            fail("Expected UnauthorizedException to be thrown");
+        } catch (UnauthorizedException e) {
+            assertNotNull(e);
         }
     }
 }
