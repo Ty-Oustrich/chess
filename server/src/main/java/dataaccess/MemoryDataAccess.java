@@ -28,7 +28,11 @@ public class MemoryDataAccess implements DataAccess {
     public void deleteAuth(String authToken)  throws DataAccessException{
         authTokens.remove(authToken); 
     }
-
+    public GameData createGame(GameData game) throws DataAccessException{
+        int thisgame = game.gameID();
+        games.put(thisgame, game); //implement already exists check later on.
+        return game;
+    }
 
     public void clear() {
         users.clear();
@@ -41,10 +45,19 @@ public class MemoryDataAccess implements DataAccess {
         return user;
     }
 
-    public GameData createGame(GameData game) { return null; }
-    public GameData getGame(int gameID) { return null; }
-    public Collection<GameData> listGames() { return null; }
-    public void updateGame(GameData game) {}
+    public GameData getGame(int gameID) throws DataAccessException { 
+        return games.get(gameID); 
+    }
+
+    public Collection<GameData> listGames()throws DataAccessException {
+        return games.values(); //this should be printable?
+    }
+
+
+    public void updateGame(GameData game) throws DataAccessException{
+        int gameId = game.gameID();
+        games.put(gameId, game);
+    }
 
 }
 
