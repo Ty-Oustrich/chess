@@ -34,7 +34,7 @@ public class MemoryDataAccess implements DataAccess {
         return game;
     }
 
-    public void clear() {
+    public void clear() throws DataAccessException{
         users.clear();
         authTokens.clear();
         games.clear();
