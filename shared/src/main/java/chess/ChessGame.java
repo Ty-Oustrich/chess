@@ -11,7 +11,7 @@ import java.util.Objects;
  * signature of the existing methods.
  */
 public class ChessGame {
-    private TeamColor TeamTurn;
+    private TeamColor teamTurn;
     private ChessBoard board;
 
     public ChessGame() {
@@ -25,7 +25,7 @@ public class ChessGame {
      * @return Which team's turn it is
      */
     public TeamColor getTeamTurn() {
-        return TeamTurn;
+        return teamTurn;
         //this might need some work
     }
 
@@ -35,7 +35,7 @@ public class ChessGame {
      * @param team the team whose turn it is
      */
     public void setTeamTurn(TeamColor team) {
-        TeamTurn = team;
+        teamTurn = team;
     }
 
     /**
@@ -122,7 +122,7 @@ public class ChessGame {
      * @return True if the specified team is in check
      */
     public boolean isInCheck(TeamColor teamColor) { //can also place a queen and knight in the kings place then check if they can take any piece?? if this doesnt work?
-        ChessPosition Kposition = null;
+        ChessPosition kingPosition = null;
         Collection<ChessPosition> enemyPieces = new ArrayList<>();
         //find king
         for(int row = 1; row <= 8; row++){
@@ -131,7 +131,7 @@ public class ChessGame {
                 ChessPiece piece = board.getPiece(pos);
                 if(piece == null){continue;}
                 if(piece.getTeamColor() == teamColor && piece.getPieceType() == ChessPiece.PieceType.KING){
-                    Kposition = new ChessPosition(row, col);
+                    kingPosition = new ChessPosition(row, col);
                 }
             }
         }
@@ -145,7 +145,7 @@ public class ChessGame {
                 enemyPieces.add(new ChessPosition(row,col));
 
                 for(ChessMove potentialCheckMove : piece.pieceMoves(board, new ChessPosition(row, col))){
-                   if(potentialCheckMove.getEndPosition().equals(Kposition)){
+                   if(potentialCheckMove.getEndPosition().equals(kingPosition)){
                        return true;
                    }
                 }
@@ -219,11 +219,11 @@ public class ChessGame {
             return false;
         }
         ChessGame chessGame = (ChessGame) o;
-        return TeamTurn == chessGame.TeamTurn && Objects.equals(board, chessGame.board);
+        return teamTurn == chessGame.teamTurn && Objects.equals(board, chessGame.board);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(TeamTurn, board);
+        return Objects.hash(teamTurn, board);
     }
 }
