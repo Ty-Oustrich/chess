@@ -2,6 +2,7 @@ package handler;
 
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import io.javalin.http.Context;
 import service.BadRequestException;
 import service.LoginRequest;
@@ -20,15 +21,23 @@ public class LoginHandler {
     
     public void handle(Context ctx) {
         try {
-            LoginRequest request = gson.fromJson(ctx.body(), LoginRequest.class);
+            String requestBody = ctx.body();
+            LoginRequest request = gson.fromJson(requestBody, LoginRequest.class);
+            boolean isMissingRequest = request == null;
+            if (isMissingRequest) {
+                throw new BadRequestException();
+            }
             LoginResult result = userService.login(request);
             sendSuccess(ctx, result);
+        } catch (JsonSyntaxException e) {
+            ctx.status(400);
+            ctx.json(new ErrorResponse("Error: bad request"));
         } catch (BadRequestException e) {
             ctx.status(400);
-            ctx.json(new ErrorResponse("Error:incorrect request"));
+            ctx.json(new ErrorResponse("Error: bad request"));
         } catch (UnauthorizedException e) {
             ctx.status(401);
-            ctx.json(new ErrorResponse("Error:unauthorized"));
+            ctx.json(new ErrorResponse("Error: unauthorized"));
         } catch (Exception e) {
             sendUnexpectedError(ctx, e);
         }
