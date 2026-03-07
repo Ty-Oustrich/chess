@@ -25,33 +25,27 @@ public class RegisterHandler {
                 throw new BadRequestException();
             }
             RegisterResult registerResult = userService.register(registerRequest);
-            sendSuccess(ctx, registerResult);
+            String responseJson = gson.toJson(registerResult);
+            ctx.status(200);
+            ctx.contentType("application/json");
+            ctx.result(responseJson);
         } catch (JsonSyntaxException e) {
-            ctx.status(400);
-            ctx.json(new ErrorResponse("Error:incorrect request"));
+            sendError(ctx, 400, "Error: bad request");
         } catch (BadRequestException e) {
-            ctx.status(400);
-            ctx.json(new ErrorResponse("Error:incorrect request"));
+            sendError(ctx, 400, "Error: bad request");
         } catch (AlreadyTakenException e) {
-            ctx.status(403);
-            ctx.json(new ErrorResponse("Error:already taken"));
+            sendError(ctx, 403, "Error: already taken");
         } catch (Exception e) {
-            sendUnexpectedError(ctx, e);
+            sendError(ctx, 500, "Error: " + e.getMessage());
         }
     }
 
-    private void sendSuccess(Context ctx, RegisterResult result) {
-        ctx.status(200);
-        ctx.json(result);
+    private void sendError(Context ctx, int status, String message) {
+        String errorJson = gson.toJson(new ErrorResponse(message));
+        ctx.status(status);
+        ctx.contentType("application/json");
+        ctx.result(errorJson);
     }
 
-    private void sendUnexpectedError(Context ctx, Exception e) {
-        String errorMessage = "Error: " + e.getMessage();
-        ErrorResponse errorResponse = new ErrorResponse(errorMessage);
-        ctx.status(500);
-        ctx.json(errorResponse);
-    }
-
-    record ErrorResponse(String message) {
-    }
+    record ErrorResponse(String message) {}
 }

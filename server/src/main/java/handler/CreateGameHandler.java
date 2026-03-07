@@ -26,33 +26,28 @@ public class CreateGameHandler {
             if (isMissingRequest) {
                 throw new BadRequestException();
             }
-            CreateGameResult createGameResult = gameService.createGame(authToken, createGameRequest.gameName());sendSuccess(ctx, createGameResult);
+            CreateGameResult createGameResult = gameService.createGame(authToken, createGameRequest.gameName());
+            String responseJson = gson.toJson(createGameResult);
+            ctx.status(200);
+            ctx.contentType("application/json");
+            ctx.result(responseJson);
         } catch (JsonSyntaxException e) {
-            ctx.status(400);
-            ctx.json(new ErrorResponse("Error: bad request"));
+            sendError(ctx, 400, "Error: bad request");
         } catch (BadRequestException e) {
-            ctx.status(400);
-            ctx.json(new ErrorResponse("Error: bad request"));
+            sendError(ctx, 400, "Error: bad request");
         } catch (UnauthorizedException e) {
-            ctx.status(401);
-            ctx.json(new ErrorResponse("Error:unauthorized"));
+            sendError(ctx, 401, "Error: unauthorized");
         } catch (Exception e) {
-            sendUnexpectedError(ctx, e);
+            sendError(ctx, 500, "Error: " + e.getMessage());
         }
     }
 
-    private void sendSuccess(Context ctx, CreateGameResult result) {
-        ctx.status(200);
-        ctx.json(result);
+    private void sendError(Context ctx, int status, String message) {
+        String errorJson = gson.toJson(new ErrorResponse(message));
+        ctx.status(status);
+        ctx.contentType("application/json");
+        ctx.result(errorJson);
     }
 
-    private void sendUnexpectedError(Context ctx, Exception e) {
-        String errorMessage = "Error: " + e.getMessage();
-        ErrorResponse errorResponse = new ErrorResponse(errorMessage);
-        ctx.status(500);
-        ctx.json(errorResponse);
-    }
-
-    record ErrorResponse(String message) {
-    }
+    record ErrorResponse(String message) {}
 }

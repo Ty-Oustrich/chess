@@ -1,6 +1,5 @@
 package handler;
 
-
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import io.javalin.http.Context;
@@ -10,7 +9,6 @@ import service.LoginResult;
 import service.UnauthorizedException;
 import service.UserService;
 
-
 public class LoginHandler {
     private final UserService userService;
     private final Gson gson = new Gson();
@@ -18,7 +16,7 @@ public class LoginHandler {
     public LoginHandler(UserService userService) {
         this.userService = userService;
     }
-    
+
     public void handle(Context ctx) {
         try {
             String requestBody = ctx.body();
@@ -28,36 +26,27 @@ public class LoginHandler {
                 throw new BadRequestException();
             }
             LoginResult result = userService.login(request);
-            sendSuccess(ctx, result);
+            String responseJson = gson.toJson(result);
+            ctx.contentType("application/json");
+            ctx.status(200);
+            ctx.result(responseJson);
         } catch (JsonSyntaxException e) {
-            ctx.status(400);
-            ctx.json(new ErrorResponse("Error: bad request"));
+            sendError(ctx, 400, "Error: bad request");
         } catch (BadRequestException e) {
-            ctx.status(400);
-            ctx.json(new ErrorResponse("Error: bad request"));
+            sendError(ctx, 400, "Error: bad request");
         } catch (UnauthorizedException e) {
-            ctx.status(401);
-            ctx.json(new ErrorResponse("Error: unauthorized"));
+            sendError(ctx, 401, "Error: unauthorized");
         } catch (Exception e) {
-            sendUnexpectedError(ctx, e);
+            sendError(ctx, 500, "Error: " + e.getMessage());
         }
     }
-    
-    private void sendSuccess(Context ctx, LoginResult result) {
-        ctx.status(200);
-        ctx.json(result);
-    }
-    
-    private void sendUnexpectedError(Context ctx, Exception e) {
-        String errorMessage = "Error: " + e.getMessage();
-        ErrorResponse errorResponse = new ErrorResponse(errorMessage);
-        ctx.status(500);
-        ctx.json(errorResponse);
+
+    private void sendError(Context ctx, int status, String message) {
+        String errorJson = gson.toJson(new ErrorResponse(message));
+        ctx.contentType("application/json");
+        ctx.status(status);
+        ctx.result(errorJson);
     }
 
     record ErrorResponse(String message) {}
 }
-
-//translates HTTP POST /session requests into LoginRequest objects
-// passes request to UserService.login() and serializes the result back to JSON
- //returns 200 with authToken on success or 401 500 on failure

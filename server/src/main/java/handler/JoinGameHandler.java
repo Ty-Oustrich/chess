@@ -27,39 +27,28 @@ public class JoinGameHandler {
                 throw new BadRequestException();
             }
             gameService.joinGame(authToken, joinGameRequest.playerColor(), joinGameRequest.gameID());
-            sendSuccess(ctx);
+            ctx.contentType("application/json");
+            ctx.status(200);
+            ctx.result("{}");
         } catch (JsonSyntaxException e) {
-            ctx.status(400);
-            ctx.json(new ErrorResponse("Error: bad request"));
+            sendError(ctx, 400, "Error: bad request");
         } catch (BadRequestException e) {
-            ctx.status(400);
-            ctx.json(new ErrorResponse("Error: bad request"));
+            sendError(ctx, 400, "Error: bad request");
         } catch (UnauthorizedException e) {
-            ctx.status(401);
-            ctx.json(new ErrorResponse("Error: unauthorized"));
+            sendError(ctx, 401, "Error: unauthorized");
         } catch (AlreadyTakenException e) {
-            ctx.status(403);
-            ctx.json(new ErrorResponse("Error: already taken"));
+            sendError(ctx, 403, "Error: already taken");
         } catch (Exception e) {
-            sendUnexpectedError(ctx, e);
+            sendError(ctx, 500, "Error: " + e.getMessage());
         }
     }
 
-    private void sendSuccess(Context ctx) {
-        ctx.status(200);
-        ctx.json(new EmptyResponse());
+    private void sendError(Context ctx, int status, String message) {
+        String errorJson = gson.toJson(new ErrorResponse(message));
+        ctx.contentType("application/json");
+        ctx.status(status);
+        ctx.result(errorJson);
     }
 
-    private void sendUnexpectedError(Context ctx, Exception e) {
-        String errorMessage = "Error: " + e.getMessage();
-        ErrorResponse errorResponse = new ErrorResponse(errorMessage);
-        ctx.status(500);
-        ctx.json(errorResponse);
-    }
-
-    record EmptyResponse() {
-    }
-
-    record ErrorResponse(String message) {
-    }
+    record ErrorResponse(String message) {}
 }
