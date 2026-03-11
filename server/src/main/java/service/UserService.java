@@ -4,6 +4,7 @@ import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
 import model.AuthData;
 import model.UserData;
+import org.mindrot.jbcrypt.BCrypt;
 import java.util.UUID;
 
 public class UserService {
@@ -32,8 +33,15 @@ public class UserService {
         UserData user = dataAccess.getUser(username);
 
         boolean isMissingUser = user == null;
-        boolean isWrongPassword = !isMissingUser && !user.password().equals(password);
-        boolean isUnauthorized = isMissingUser || isWrongPassword;
+        boolean isExistingUser = !isMissingUser;
+
+        boolean isPasswordValid = false;
+        if (isExistingUser) {
+            String storedPasswordHash = user.password();
+            isPasswordValid = isPasswordMatch(password, storedPasswordHash);
+        }
+
+        boolean isUnauthorized = isMissingUser || !isPasswordValid;
         if (isUnauthorized) {
             throw new UnauthorizedException();
         }
@@ -70,7 +78,8 @@ public class UserService {
             throw new AlreadyTakenException();
         }
 
-        UserData userToCreate = new UserData(username, password, email);
+        String passwordHash = hashPassword(password);
+        UserData userToCreate = new UserData(username, passwordHash, email);
         dataAccess.createUser(userToCreate);
         String token = UUID.randomUUID().toString();
         AuthData authData = new AuthData(token, username);
@@ -93,5 +102,22 @@ public class UserService {
         }
 
         dataAccess.deleteAuth(authToken);
+    }
+
+
+    private static String hashPassword(String clearTextPassword) {
+        String salt = BCrypt.gensalt();
+        String passwordHash = BCrypt.hashpw(clearTextPassword, salt);
+        return passwordHash;
+    }
+
+
+    private static boolean isPasswordMatch(String clearTextPassword, String storedPasswordHash) {
+        try {
+            boolean isMatch = BCrypt.checkpw(clearTextPassword, storedPasswordHash);
+            return isMatch;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
     }
 }

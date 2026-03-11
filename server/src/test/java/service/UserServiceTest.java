@@ -4,6 +4,7 @@ import dataaccess.MemoryDataAccess;
 import model.AuthData;
 import model.UserData;
 import org.junit.jupiter.api.Test;
+import org.mindrot.jbcrypt.BCrypt;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -18,7 +19,8 @@ public class UserServiceTest {
         MemoryDataAccess dataAccess = new MemoryDataAccess();
         String username = "chess-user";
         String password = "secret123";
-        dataAccess.createUser(new UserData(username, password, "user@example.com"));
+        String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+        dataAccess.createUser(new UserData(username, hashedPassword, "user@example.com"));
         UserService userService = new UserService(dataAccess);
 
         LoginResult loginResult = userService.login(new LoginRequest(username, password));
@@ -48,7 +50,8 @@ public class UserServiceTest {
     public void loginWrongPasswordThrowsExpectedException() throws Exception {
         MemoryDataAccess dataAccess = new MemoryDataAccess();
         String username = "chess-user";
-        dataAccess.createUser(new UserData(username, "correct-password", "user@example.com"));
+        String hashedPassword = BCrypt.hashpw("correct-password", BCrypt.gensalt());
+        dataAccess.createUser(new UserData(username, hashedPassword, "user@example.com"));
         UserService userService = new UserService(dataAccess);
 
         try {
@@ -63,7 +66,8 @@ public class UserServiceTest {
     public void loginMissingFieldsThrowBadRequestException() throws Exception {
         MemoryDataAccess dataAccess = new MemoryDataAccess();
         String username = "chess-user";
-        dataAccess.createUser(new UserData(username, "correct-password", "user@example.com"));
+        String hashedPassword = BCrypt.hashpw("correct-password", BCrypt.gensalt());
+        dataAccess.createUser(new UserData(username, hashedPassword, "user@example.com"));
         UserService userService = new UserService(dataAccess);
 
         LoginRequest missingUsernameRequest = new LoginRequest(null, "correct-password");
@@ -106,7 +110,8 @@ public class UserServiceTest {
     @Test
     public void registerDuplicateUsernameThrowsExpectedException() throws Exception {
         MemoryDataAccess dataAccess = new MemoryDataAccess();
-        dataAccess.createUser(new UserData("chess-user", "secret123", "user@example.com"));
+        String hashedPassword = BCrypt.hashpw("secret123", BCrypt.gensalt());
+        dataAccess.createUser(new UserData("chess-user", hashedPassword, "user@example.com"));
         UserService userService = new UserService(dataAccess);
 
         assertThrows(AlreadyTakenException.class,
@@ -127,7 +132,8 @@ public class UserServiceTest {
         MemoryDataAccess dataAccess = new MemoryDataAccess();
         String username = "chess-user";
         String password = "secret123";
-        dataAccess.createUser(new UserData(username, password, "user@example.com"));
+        String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+        dataAccess.createUser(new UserData(username, hashedPassword, "user@example.com"));
         UserService userService = new UserService(dataAccess);
 
         LoginResult loginResult = userService.login(new LoginRequest(username, password));
