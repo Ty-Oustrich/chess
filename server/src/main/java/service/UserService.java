@@ -30,22 +30,13 @@ public class UserService {
             throw new BadRequestException();
         }
 
-        UserData user = dataAccess.getUser(username);
-
-        boolean isMissingUser = user == null;
-        boolean isExistingUser = !isMissingUser;
-
-        boolean isPasswordValid = false;
-        if (isExistingUser) {
-            String storedPasswordHash = user.password();
-            isPasswordValid = isPasswordMatch(password, storedPasswordHash);
-        }
-
-        boolean isUnauthorized = isMissingUser || !isPasswordValid;
+        boolean isPasswordValid = verifyUser(username, password);
+        boolean isUnauthorized = !isPasswordValid;
         if (isUnauthorized) {
             throw new UnauthorizedException();
         }
 
+        UserData user = dataAccess.getUser(username);
         String token = UUID.randomUUID().toString();
         String userNameForToken = user.username();
         AuthData authData = new AuthData(token, userNameForToken);
@@ -112,12 +103,15 @@ public class UserService {
     }
 
 
-    private static boolean isPasswordMatch(String clearTextPassword, String storedPasswordHash) {
-        try {
-            boolean isMatch = BCrypt.checkpw(clearTextPassword, storedPasswordHash);
-            return isMatch;
-        } catch (IllegalArgumentException e) {
+    private boolean verifyUser(String username, String providedClearTextPassword) throws DataAccessException {
+        UserData user = dataAccess.getUser(username);
+        boolean isMissingUser = user == null;
+        if (isMissingUser) {
             return false;
         }
+
+        String hashedPassword = user.password();
+        boolean isValid = BCrypt.checkpw(providedClearTextPassword, hashedPassword);
+        return isValid;
     }
 }
