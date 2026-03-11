@@ -6,13 +6,14 @@ import com.google.gson.JsonSyntaxException;
 import model.AuthData;
 import model.GameData;
 import model.UserData;
+import util.GsonFactory;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Collection;
 
 public class MySqlDataAccess implements DataAccess {
-    private final Gson gson = new Gson();
+    private final Gson gson = GsonFactory.create();
 
     @Override
     public GameData getGame(int gameID) throws DataAccessException {
