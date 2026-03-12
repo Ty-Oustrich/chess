@@ -1,7 +1,7 @@
 package server;
 
 import dataaccess.DataAccess;
-import dataaccess.MemoryDataAccess;
+import dataaccess.MySqlDataAccess;
 import handler.ClearHandler;
 import handler.CreateGameHandler;
 import handler.JoinGameHandler;
@@ -20,7 +20,7 @@ public class Server {
     public Server() {
         javalin = Javalin.create(config -> config.staticFiles.add("web"));
 
-        DataAccess dataAccess = new MemoryDataAccess();
+        DataAccess dataAccess = new MySqlDataAccess();
         ClearService clearService = new ClearService(dataAccess);
         UserService userService = new UserService(dataAccess);
         GameService gameService = new GameService(dataAccess);
