@@ -27,52 +27,28 @@ public class MySqlDataAccess implements DataAccess {
         try (var connection = DatabaseManager.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
-            int gameIdParameterIndex = 1;
-            preparedStatement.setInt(gameIdParameterIndex, gameID);
+            preparedStatement.setInt(1, gameID);
 
             ResultSet resultSet = preparedStatement.executeQuery();
-            boolean isMissingRow = !resultSet.next();
-            if (isMissingRow) {
-                return null;
-            }
+            if (!resultSet.next()) return null;
 
-            GameData gameData = readGameFromResultSet(resultSet);
-            return gameData;
+            return readGameFromResultSet(resultSet);
         } catch (Exception exception) {
-            String message = "failed to get game from database";
-            throw new DataAccessException(message, exception);
+            throw new DataAccessException("getGame failed for id=" + gameID, exception);
         }
     }
 
     @Override
     public void clear() throws DataAccessException {
-        String deleteAuthSql = """
-            DELETE FROM auth
-            """;
-
-        String deleteGamesSql = """
-            DELETE FROM games
-            """;
-
-        String deleteUsersSql = """
-            DELETE FROM users
-            """;
-
+        String[] tables = {"auth", "games", "users"};
         try (var connection = DatabaseManager.getConnection()) {
-            try (PreparedStatement deleteAuthStatement = connection.prepareStatement(deleteAuthSql)) {
-                deleteAuthStatement.executeUpdate();
-            }
-
-            try (PreparedStatement deleteGamesStatement = connection.prepareStatement(deleteGamesSql)) {
-                deleteGamesStatement.executeUpdate();
-            }
-
-            try (PreparedStatement deleteUsersStatement = connection.prepareStatement(deleteUsersSql)) {
-                deleteUsersStatement.executeUpdate();
+            for (String table : tables) {
+                try (PreparedStatement stmt = connection.prepareStatement("DELETE FROM " + table)) {
+                    stmt.executeUpdate();
+                }
             }
         } catch (Exception exception) {
-            String message = "failed to clear database tables";
-            throw new DataAccessException(message, exception);
+            throw new DataAccessException("clear failed", exception);
         }
     }
 
@@ -86,28 +62,16 @@ public class MySqlDataAccess implements DataAccess {
         try (var connection = DatabaseManager.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
-            String username = user.username();
-            String password = user.password();
-            String email = user.email();
-            int usernameParameterIndex = 1;
-            int passwordParameterIndex = 2;
-            int emailParameterIndex = 3;
+            preparedStatement.setString(1, user.username());
+            preparedStatement.setString(2, user.password());
+            preparedStatement.setString(3, user.email());
 
-            preparedStatement.setString(usernameParameterIndex, username);
-            preparedStatement.setString(passwordParameterIndex, password);
-            preparedStatement.setString(emailParameterIndex, email);
-
-            int rowsUpdated = preparedStatement.executeUpdate();
-            boolean isMissingInsertedRow = rowsUpdated != 1;
-            if (isMissingInsertedRow) {
-                String message = "failed to insert user into database";
-                throw new DataAccessException(message);
-            }
+            if (preparedStatement.executeUpdate() != 1)
+                throw new DataAccessException("failed to insert user into database");
 
             return user;
         } catch (Exception exception) {
-            String message = "failed to create user in database";
-            throw new DataAccessException(message, exception);
+            throw new DataAccessException("createUser failed for username=" + user.username(), exception);
         }
     }
 
@@ -123,24 +87,18 @@ public class MySqlDataAccess implements DataAccess {
         try (var connection = DatabaseManager.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
-            int usernameParameterIndex = 1;
-            preparedStatement.setString(usernameParameterIndex, username);
+            preparedStatement.setString(1, username);
 
             ResultSet resultSet = preparedStatement.executeQuery();
-            boolean isMissingRow = !resultSet.next();
-            if (isMissingRow) {
-                return null;
-            }
+            if (!resultSet.next()) return null;
 
-            String storedUsername = resultSet.getString("username");
-            String storedPassword = resultSet.getString("password");
-            String storedEmail = resultSet.getString("email");
-
-            UserData user = new UserData(storedUsername, storedPassword, storedEmail);
-            return user;
+            return new UserData(
+                    resultSet.getString("username"),
+                    resultSet.getString("password"),
+                    resultSet.getString("email")
+            );
         } catch (Exception exception) {
-            String message = "failed to get user from database";
-            throw new DataAccessException(message, exception);
+            throw new DataAccessException("getUser failed for username=" + username, exception);
         }
     }
 
@@ -154,36 +112,18 @@ public class MySqlDataAccess implements DataAccess {
         try (var connection = DatabaseManager.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
-            int gameId = game.gameID();
-            String whiteUsername = game.whiteUsername();
-            String blackUsername = game.blackUsername();
-            String gameName = game.gameName();
-            ChessGame chessGame = game.game();
-            String gameStateJson = gson.toJson(chessGame, ChessGame.class);
+            preparedStatement.setInt(1, game.gameID());
+            preparedStatement.setString(2, game.whiteUsername());
+            preparedStatement.setString(3, game.blackUsername());
+            preparedStatement.setString(4, game.gameName());
+            preparedStatement.setString(5, gson.toJson(game.game(), ChessGame.class));
 
-            int gameIdParameterIndex = 1;
-            int whiteUsernameParameterIndex = 2;
-            int blackUsernameParameterIndex = 3;
-            int gameNameParameterIndex = 4;
-            int gameStateJsonParameterIndex = 5;
-
-            preparedStatement.setInt(gameIdParameterIndex, gameId);
-            preparedStatement.setString(whiteUsernameParameterIndex, whiteUsername);
-            preparedStatement.setString(blackUsernameParameterIndex, blackUsername);
-            preparedStatement.setString(gameNameParameterIndex, gameName);
-            preparedStatement.setString(gameStateJsonParameterIndex, gameStateJson);
-
-            int rowsUpdated = preparedStatement.executeUpdate();
-            boolean isMissingInsertedRow = rowsUpdated != 1;
-            if (isMissingInsertedRow) {
-                String message = "failed to insert game into database";
-                throw new DataAccessException(message);
-            }
+            if (preparedStatement.executeUpdate() != 1)
+                throw new DataAccessException("createGame insert returned unexpected row count");
 
             return game;
         } catch (Exception exception) {
-            String message = "failed to create game in database";
-            throw new DataAccessException(message, exception);
+            throw new DataAccessException("createGame failed for id=" + game.gameID(), exception);
         }
     }
 
@@ -200,15 +140,12 @@ public class MySqlDataAccess implements DataAccess {
             ResultSet resultSet = preparedStatement.executeQuery();
             Collection<GameData> games = new ArrayList<>();
 
-            while (resultSet.next()) {
-                GameData gameData = readGameFromResultSet(resultSet);
-                games.add(gameData);
-            }
+            while (resultSet.next())
+                games.add(readGameFromResultSet(resultSet));
 
             return games;
         } catch (Exception exception) {
-            String message = "failed to list games from database";
-            throw new DataAccessException(message, exception);
+            throw new DataAccessException("listGames failed", exception);
         }
     }
 
@@ -223,40 +160,19 @@ public class MySqlDataAccess implements DataAccess {
         try (var connection = DatabaseManager.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
-            int gameId = game.gameID();
-            String whiteUsername = game.whiteUsername();
-            String blackUsername = game.blackUsername();
-            String gameName = game.gameName();
-            ChessGame chessGame = game.game();
-            String gameStateJson = gson.toJson(chessGame, ChessGame.class);
+            preparedStatement.setString(1, game.whiteUsername());
+            preparedStatement.setString(2, game.blackUsername());
+            preparedStatement.setString(3, game.gameName());
+            preparedStatement.setString(4, gson.toJson(game.game(), ChessGame.class));
+            preparedStatement.setInt(5, game.gameID());
 
-            int whiteUsernameParameterIndex = 1;
-            int blackUsernameParameterIndex = 2;
-            int gameNameParameterIndex = 3;
-            int gameStateJsonParameterIndex = 4;
-            int gameIdParameterIndex = 5;
-
-            preparedStatement.setString(whiteUsernameParameterIndex, whiteUsername);
-            preparedStatement.setString(blackUsernameParameterIndex, blackUsername);
-            preparedStatement.setString(gameNameParameterIndex, gameName);
-            preparedStatement.setString(gameStateJsonParameterIndex, gameStateJson);
-            preparedStatement.setInt(gameIdParameterIndex, gameId);
-
-            int rowsUpdated = preparedStatement.executeUpdate();
-            boolean isMissingUpdatedRow = rowsUpdated != 1;
-            if (isMissingUpdatedRow) {
-                String message = "failed to update game in database";
-                throw new DataAccessException(message);
-            }
+            if (preparedStatement.executeUpdate() != 1)
+                throw new DataAccessException("no game row found for id=" + game.gameID());
         } catch (Exception exception) {
-            String message = "failed to update game in database";
-            throw new DataAccessException(message, exception);
+            throw new DataAccessException("updateGame failed for id" + game.gameID(), exception);
         }
     }
 
-    /**
-     * Inserts a new auth row that links an auth token to a username.
-     */
     @Override
     public AuthData createAuth(AuthData auth) throws DataAccessException {
         String sql = """
@@ -267,33 +183,18 @@ public class MySqlDataAccess implements DataAccess {
         try (var connection = DatabaseManager.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
-            String authToken = auth.authToken();
-            String username = auth.username();
+            preparedStatement.setString(1, auth.authToken());
+            preparedStatement.setString(2, auth.username());
 
-            int authTokenParameterIndex = 1;
-            int usernameParameterIndex = 2;
-
-            preparedStatement.setString(authTokenParameterIndex, authToken);
-            preparedStatement.setString(usernameParameterIndex, username);
-
-            int rowsUpdated = preparedStatement.executeUpdate();
-            boolean isMissingInsertedRow = rowsUpdated != 1;
-            if (isMissingInsertedRow) {
-                String message = "failed to insert auth into database";
-                throw new DataAccessException(message);
-            }
+            if (preparedStatement.executeUpdate() != 1)
+                throw new DataAccessException("createAuth insert returned unexpected row count");
 
             return auth;
         } catch (Exception exception) {
-            String message = "failed to create auth in database";
-            throw new DataAccessException(message, exception);
+            throw new DataAccessException("createAuth failed", exception);
         }
     }
 
-    /**
-     * Looks up an auth row by auth token and returns the corresponding AuthData.
-     * Returns null when there is no matching row.
-     */
     @Override
     public AuthData getAuth(String authToken) throws DataAccessException {
         String sql = """
@@ -305,30 +206,20 @@ public class MySqlDataAccess implements DataAccess {
         try (var connection = DatabaseManager.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
-            int authTokenParameterIndex = 1;
-            preparedStatement.setString(authTokenParameterIndex, authToken);
+            preparedStatement.setString(1, authToken);
 
             ResultSet resultSet = preparedStatement.executeQuery();
-            boolean isMissingRow = !resultSet.next();
-            if (isMissingRow) {
-                return null;
-            }
+            if (!resultSet.next()) return null;
 
-            String storedAuthToken = resultSet.getString("auth_token");
-            String storedUsername = resultSet.getString("username");
-
-            AuthData authData = new AuthData(storedAuthToken, storedUsername);
-            return authData;
+            return new AuthData(
+                    resultSet.getString("auth_token"),
+                    resultSet.getString("username")
+            );
         } catch (Exception exception) {
-            String message = "failed to get auth from database";
-            throw new DataAccessException(message, exception);
+            throw new DataAccessException("getAuth failed", exception);
         }
     }
 
-    /**
-     * Deletes an auth row for the provided auth token.
-     * Missing rows are treated as a no-op.
-     */
     @Override
     public void deleteAuth(String authToken) throws DataAccessException {
         String sql = """
@@ -339,13 +230,10 @@ public class MySqlDataAccess implements DataAccess {
         try (var connection = DatabaseManager.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
-            int authTokenParameterIndex = 1;
-            preparedStatement.setString(authTokenParameterIndex, authToken);
-
+            preparedStatement.setString(1, authToken);
             preparedStatement.executeUpdate();
         } catch (Exception exception) {
-            String message = "failed to delete auth from database";
-            throw new DataAccessException(message, exception);
+            throw new DataAccessException("deleteAuth failed", exception);
         }
     }
 

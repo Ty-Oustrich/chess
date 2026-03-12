@@ -15,34 +15,25 @@ public class MemoryDataAccess implements DataAccess {
     final private HashMap<Integer, GameData> games = new HashMap<>();
 
     public UserData getUser(String username) throws DataAccessException {
-        String requestedUsername = username;
-        UserData storedUser = users.get(requestedUsername);
-        return storedUser;
+        return users.get(username);
     }
     
     public AuthData createAuth(AuthData auth) throws DataAccessException {
-        AuthData authToStore = auth;
-        String authToken = authToStore.authToken();
-        authTokens.put(authToken, authToStore);
-        return authToStore;
+        authTokens.put(auth.authToken(), auth);
+        return auth;
     }
 
     public AuthData getAuth(String authToken) throws DataAccessException {
-        String requestedAuthToken = authToken;
-        AuthData storedAuth = authTokens.get(requestedAuthToken);
-        return storedAuth;
+        return authTokens.get(authToken);
     }
 
     public void deleteAuth(String authToken) throws DataAccessException {
-        String tokenToDelete = authToken;
-        authTokens.remove(tokenToDelete);
+        authTokens.remove(authToken);
     }
 
     public GameData createGame(GameData game) throws DataAccessException {
-        GameData gameToStore = game;
-        int gameId = gameToStore.gameID();
-        games.put(gameId, gameToStore);
-        return gameToStore;
+        games.put(game.gameID(), game);
+        return game;
     }
 
     public void clear() throws DataAccessException{
@@ -52,33 +43,23 @@ public class MemoryDataAccess implements DataAccess {
     }
 
     public UserData createUser(UserData user) throws DataAccessException {
-        UserData userToStore = user;
-        String username = userToStore.username();
-        users.put(username, userToStore);
-        return userToStore;
+        users.put(user.username(), user);
+        return user;
     }
 
     public GameData getGame(int gameID) throws DataAccessException {
-        int requestedGameId = gameID;
-        GameData storedGame = games.get(requestedGameId);
-        return storedGame;
+        return games.get(gameID);
     }
 
     public Collection<GameData> listGames() throws DataAccessException {
-        Collection<GameData> storedGames = games.values();
-        Collection<GameData> gamesCopy = new ArrayList<>(storedGames);
-        return gamesCopy;
+        return new ArrayList<>(games.values());
     }
 
     public void updateGame(GameData game) throws DataAccessException {
-        GameData gameToUpdate = game;
-        int gameId = gameToUpdate.gameID();
-        boolean hasExistingGame = games.containsKey(gameId);
-        if (!hasExistingGame) {
-            String message = "failed to update game";
-            throw new DataAccessException(message);
-        }
-        games.put(gameId, gameToUpdate);
+        int gameId = game.gameID();
+        if (!games.containsKey(gameId))
+            throw new DataAccessException("failed to update game");
+        games.put(gameId, game);
     }
 
 }

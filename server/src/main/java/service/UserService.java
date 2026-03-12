@@ -15,59 +15,34 @@ public class UserService {
     }
 
     public LoginResult login(LoginRequest request) throws DataAccessException, BadRequestException, UnauthorizedException {
-        boolean isMissingRequest = request == null;
-        if (isMissingRequest) {
-            throw new BadRequestException();
-        }
+        if (request == null) throw new BadRequestException();
 
         String username = request.username();
         String password = request.password();
 
-        boolean isMissingUsername = username == null || username.isBlank();
-        boolean isMissingPassword = password == null || password.isBlank();
-        boolean isBadRequest = isMissingUsername || isMissingPassword;
-        if (isBadRequest) {
+        if (username == null || username.isBlank() || password == null || password.isBlank())
             throw new BadRequestException();
-        }
 
-        boolean isPasswordValid = verifyUser(username, password);
-        boolean isUnauthorized = !isPasswordValid;
-        if (isUnauthorized) {
-            throw new UnauthorizedException();
-        }
+        if (!verifyUser(username, password)) throw new UnauthorizedException();
 
-        UserData user = dataAccess.getUser(username);
         String token = UUID.randomUUID().toString();
-        String userNameForToken = user.username();
-        AuthData authData = new AuthData(token, userNameForToken);
-        dataAccess.createAuth(authData);
+        dataAccess.createAuth(new AuthData(token, username));
 
-        return new LoginResult(userNameForToken, token);
+        return new LoginResult(username, token);
     }
 
     public RegisterResult register(RegisterRequest request)
             throws DataAccessException, BadRequestException, AlreadyTakenException {
-        boolean isMissingRequest = request == null;
-        if (isMissingRequest) {
-            throw new BadRequestException();
-        }
+        if (request == null) throw new BadRequestException();
 
         String username = request.username();
         String password = request.password();
         String email = request.email();
 
-        boolean isMissingUsername = username == null || username.isBlank();
-        boolean isMissingPassword = password == null || password.isBlank();
-        boolean isMissingEmail = email == null || email.isBlank();
-        boolean isBadRequest = isMissingUsername || isMissingPassword || isMissingEmail;
-        if (isBadRequest) {
+        if (username == null || username.isBlank() || password == null || password.isBlank() || email == null || email.isBlank())
             throw new BadRequestException();
-        }
 
-        UserData existingUser = dataAccess.getUser(username);
-        if (existingUser != null) {
-            throw new AlreadyTakenException();
-        }
+        if (dataAccess.getUser(username) != null) throw new AlreadyTakenException();
 
         String passwordHash = hashPassword(password);
         UserData userToCreate = new UserData(username, passwordHash, email);
@@ -80,38 +55,21 @@ public class UserService {
     }
 
     public void logout(String authToken) throws DataAccessException, UnauthorizedException {
-        boolean isMissingAuthToken = authToken == null;
-        isMissingAuthToken = isMissingAuthToken || authToken.isBlank();
-        if (isMissingAuthToken) {
-            throw new UnauthorizedException();
-        }
-
-        AuthData existingAuthData = dataAccess.getAuth(authToken);
-        boolean isMissingAuthData = existingAuthData == null;
-        if (isMissingAuthData) {
-            throw new UnauthorizedException();
-        }
+        if (authToken == null || authToken.isBlank()) throw new UnauthorizedException();
+        if (dataAccess.getAuth(authToken) == null) throw new UnauthorizedException();
 
         dataAccess.deleteAuth(authToken);
     }
 
 
-    private static String hashPassword(String clearTextPassword) {
-        String salt = BCrypt.gensalt();
-        String passwordHash = BCrypt.hashpw(clearTextPassword, salt);
-        return passwordHash;
+    private static String hashPassword(String textPassword) {
+        return BCrypt.hashpw(textPassword, BCrypt.gensalt());
     }
 
 
-    private boolean verifyUser(String username, String providedClearTextPassword) throws DataAccessException {
+    private boolean verifyUser(String username, String providedTextPassword) throws DataAccessException {
         UserData user = dataAccess.getUser(username);
-        boolean isMissingUser = user == null;
-        if (isMissingUser) {
-            return false;
-        }
-
-        String hashedPassword = user.password();
-        boolean isValid = BCrypt.checkpw(providedClearTextPassword, hashedPassword);
-        return isValid;
+        if (user == null) return false;
+        return BCrypt.checkpw(providedTextPassword, user.password());
     }
 }
