@@ -4,6 +4,7 @@ import model.AuthData;
 import model.GameData;
 import model.UserData;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 
@@ -13,25 +14,35 @@ public class MemoryDataAccess implements DataAccess {
     final private HashMap<String, AuthData> authTokens = new HashMap<>();
     final private HashMap<Integer, GameData> games = new HashMap<>();
 
-    public UserData getUser(String username)throws DataAccessException{
-        return users.get(username);
+    public UserData getUser(String username) throws DataAccessException {
+        String requestedUsername = username;
+        UserData storedUser = users.get(requestedUsername);
+        return storedUser;
     }
     
     public AuthData createAuth(AuthData auth) throws DataAccessException {
-        authTokens.put(auth.authToken(), auth);
-        return auth;
+        AuthData authToStore = auth;
+        String authToken = authToStore.authToken();
+        authTokens.put(authToken, authToStore);
+        return authToStore;
     }
-    public AuthData getAuth(String authToken) throws DataAccessException{
-         return authTokens.get(authToken); 
-        }
 
-    public void deleteAuth(String authToken)  throws DataAccessException{
-        authTokens.remove(authToken); 
+    public AuthData getAuth(String authToken) throws DataAccessException {
+        String requestedAuthToken = authToken;
+        AuthData storedAuth = authTokens.get(requestedAuthToken);
+        return storedAuth;
     }
-    public GameData createGame(GameData game) throws DataAccessException{
-        int thisgame = game.gameID();
-        games.put(thisgame, game); //implement already exists check later on.
-        return game;
+
+    public void deleteAuth(String authToken) throws DataAccessException {
+        String tokenToDelete = authToken;
+        authTokens.remove(tokenToDelete);
+    }
+
+    public GameData createGame(GameData game) throws DataAccessException {
+        GameData gameToStore = game;
+        int gameId = gameToStore.gameID();
+        games.put(gameId, gameToStore);
+        return gameToStore;
     }
 
     public void clear() throws DataAccessException{
@@ -40,25 +51,35 @@ public class MemoryDataAccess implements DataAccess {
         games.clear();
     }
 
-    public UserData createUser(UserData user) throws DataAccessException{
-        users.put(user.username(), user);
-        return user;
+    public UserData createUser(UserData user) throws DataAccessException {
+        UserData userToStore = user;
+        String username = userToStore.username();
+        users.put(username, userToStore);
+        return userToStore;
     }
 
-    public GameData getGame(int gameID) throws DataAccessException { 
-        return games.get(gameID); 
+    public GameData getGame(int gameID) throws DataAccessException {
+        int requestedGameId = gameID;
+        GameData storedGame = games.get(requestedGameId);
+        return storedGame;
     }
 
-    public Collection<GameData> listGames()throws DataAccessException {
-        return games.values(); //this should be printable?
+    public Collection<GameData> listGames() throws DataAccessException {
+        Collection<GameData> storedGames = games.values();
+        Collection<GameData> gamesCopy = new ArrayList<>(storedGames);
+        return gamesCopy;
     }
 
-
-    public void updateGame(GameData game) throws DataAccessException{
-        int gameId = game.gameID();
-        games.put(gameId, game);
+    public void updateGame(GameData game) throws DataAccessException {
+        GameData gameToUpdate = game;
+        int gameId = gameToUpdate.gameID();
+        boolean hasExistingGame = games.containsKey(gameId);
+        if (!hasExistingGame) {
+            String message = "failed to update game";
+            throw new DataAccessException(message);
+        }
+        games.put(gameId, gameToUpdate);
     }
 
 }
 
-//hashmaps and collections here

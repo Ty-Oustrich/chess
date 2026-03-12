@@ -46,20 +46,102 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public void clear() throws DataAccessException {
-        String message = "clear is not implemented for MySqlDataAccess";
-        throw new DataAccessException(message);
+        String deleteAuthSql = """
+            DELETE FROM auth
+            """;
+
+        String deleteGamesSql = """
+            DELETE FROM games
+            """;
+
+        String deleteUsersSql = """
+            DELETE FROM users
+            """;
+
+        try (var connection = DatabaseManager.getConnection()) {
+            try (PreparedStatement deleteAuthStatement = connection.prepareStatement(deleteAuthSql)) {
+                deleteAuthStatement.executeUpdate();
+            }
+
+            try (PreparedStatement deleteGamesStatement = connection.prepareStatement(deleteGamesSql)) {
+                deleteGamesStatement.executeUpdate();
+            }
+
+            try (PreparedStatement deleteUsersStatement = connection.prepareStatement(deleteUsersSql)) {
+                deleteUsersStatement.executeUpdate();
+            }
+        } catch (Exception exception) {
+            String message = "failed to clear database tables";
+            throw new DataAccessException(message, exception);
+        }
     }
 
     @Override
     public UserData createUser(UserData user) throws DataAccessException {
-        String message = "createUser is not implemented for MySqlDataAccess";
-        throw new DataAccessException(message);
+        String sql = """
+            INSERT INTO users (username, password, email)
+            VALUES (?, ?, ?)
+            """;
+
+        try (var connection = DatabaseManager.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+
+            String username = user.username();
+            String password = user.password();
+            String email = user.email();
+            int usernameParameterIndex = 1;
+            int passwordParameterIndex = 2;
+            int emailParameterIndex = 3;
+
+            preparedStatement.setString(usernameParameterIndex, username);
+            preparedStatement.setString(passwordParameterIndex, password);
+            preparedStatement.setString(emailParameterIndex, email);
+
+            int rowsUpdated = preparedStatement.executeUpdate();
+            boolean isMissingInsertedRow = rowsUpdated != 1;
+            if (isMissingInsertedRow) {
+                String message = "failed to insert user into database";
+                throw new DataAccessException(message);
+            }
+
+            return user;
+        } catch (Exception exception) {
+            String message = "failed to create user in database";
+            throw new DataAccessException(message, exception);
+        }
     }
+
 
     @Override
     public UserData getUser(String username) throws DataAccessException {
-        String message = "getUser is not implemented for MySqlDataAccess";
-        throw new DataAccessException(message);
+        String sql = """
+            SELECT username, password, email
+            FROM users
+            WHERE username = ?
+            """;
+
+        try (var connection = DatabaseManager.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+
+            int usernameParameterIndex = 1;
+            preparedStatement.setString(usernameParameterIndex, username);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+            boolean isMissingRow = !resultSet.next();
+            if (isMissingRow) {
+                return null;
+            }
+
+            String storedUsername = resultSet.getString("username");
+            String storedPassword = resultSet.getString("password");
+            String storedEmail = resultSet.getString("email");
+
+            UserData user = new UserData(storedUsername, storedPassword, storedEmail);
+            return user;
+        } catch (Exception exception) {
+            String message = "failed to get user from database";
+            throw new DataAccessException(message, exception);
+        }
     }
 
     @Override
@@ -172,22 +254,99 @@ public class MySqlDataAccess implements DataAccess {
         }
     }
 
+    /**
+     * Inserts a new auth row that links an auth token to a username.
+     */
     @Override
     public AuthData createAuth(AuthData auth) throws DataAccessException {
-        String message = "createAuth is not implemented for MySqlDataAccess";
-        throw new DataAccessException(message);
+        String sql = """
+            INSERT INTO auth (auth_token, username)
+            VALUES (?, ?)
+            """;
+
+        try (var connection = DatabaseManager.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+
+            String authToken = auth.authToken();
+            String username = auth.username();
+
+            int authTokenParameterIndex = 1;
+            int usernameParameterIndex = 2;
+
+            preparedStatement.setString(authTokenParameterIndex, authToken);
+            preparedStatement.setString(usernameParameterIndex, username);
+
+            int rowsUpdated = preparedStatement.executeUpdate();
+            boolean isMissingInsertedRow = rowsUpdated != 1;
+            if (isMissingInsertedRow) {
+                String message = "failed to insert auth into database";
+                throw new DataAccessException(message);
+            }
+
+            return auth;
+        } catch (Exception exception) {
+            String message = "failed to create auth in database";
+            throw new DataAccessException(message, exception);
+        }
     }
 
+    /**
+     * Looks up an auth row by auth token and returns the corresponding AuthData.
+     * Returns null when there is no matching row.
+     */
     @Override
     public AuthData getAuth(String authToken) throws DataAccessException {
-        String message = "getAuth is not implemented for MySqlDataAccess";
-        throw new DataAccessException(message);
+        String sql = """
+            SELECT auth_token, username
+            FROM auth
+            WHERE auth_token = ?
+            """;
+
+        try (var connection = DatabaseManager.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+
+            int authTokenParameterIndex = 1;
+            preparedStatement.setString(authTokenParameterIndex, authToken);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+            boolean isMissingRow = !resultSet.next();
+            if (isMissingRow) {
+                return null;
+            }
+
+            String storedAuthToken = resultSet.getString("auth_token");
+            String storedUsername = resultSet.getString("username");
+
+            AuthData authData = new AuthData(storedAuthToken, storedUsername);
+            return authData;
+        } catch (Exception exception) {
+            String message = "failed to get auth from database";
+            throw new DataAccessException(message, exception);
+        }
     }
 
+    /**
+     * Deletes an auth row for the provided auth token.
+     * Missing rows are treated as a no-op.
+     */
     @Override
     public void deleteAuth(String authToken) throws DataAccessException {
-        String message = "deleteAuth is not implemented for MySqlDataAccess";
-        throw new DataAccessException(message);
+        String sql = """
+            DELETE FROM auth
+            WHERE auth_token = ?
+            """;
+
+        try (var connection = DatabaseManager.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+
+            int authTokenParameterIndex = 1;
+            preparedStatement.setString(authTokenParameterIndex, authToken);
+
+            preparedStatement.executeUpdate();
+        } catch (Exception exception) {
+            String message = "failed to delete auth from database";
+            throw new DataAccessException(message, exception);
+        }
     }
 
     private GameData readGameFromResultSet(ResultSet resultSet) throws DataAccessException {
