@@ -16,6 +16,49 @@ import java.util.Collection;
 public class MySqlDataAccess implements DataAccess {
     private final Gson gson = GsonFactory.create();
 
+    public MySqlDataAccess() {
+        try {
+            configureDatabase();
+        } catch (DataAccessException e) {
+            throw new RuntimeException("Could not initialize database", e);
+        }
+    }
+
+    private void configureDatabase() throws DataAccessException {
+        DatabaseManager.createDatabase();
+        String[] createStatements = {
+            """
+            CREATE TABLE IF NOT EXISTS users (
+                username VARCHAR(255) PRIMARY KEY,
+                password VARCHAR(255) NOT NULL,
+                email VARCHAR(255) NOT NULL
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS auth (
+                auth_token VARCHAR(255) PRIMARY KEY,
+                username VARCHAR(255) NOT NULL
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS games (
+                game_id INT PRIMARY KEY,
+                white_username VARCHAR(255),
+                black_username VARCHAR(255),
+                game_name VARCHAR(255) NOT NULL,
+                game_state_json TEXT NOT NULL
+            )
+            """
+        };
+        try (var conn = DatabaseManager.getConnection();
+             var stmt = conn.createStatement()) {
+            for (String sql : createStatements)
+                stmt.executeUpdate(sql);
+        } catch (Exception e) {
+            throw new DataAccessException("Failed to create tables", e);
+        }
+    }
+
     @Override
     public GameData getGame(int gameID) throws DataAccessException {
         String sql = """
