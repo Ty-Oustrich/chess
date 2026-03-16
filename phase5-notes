@@ -1,0 +1,8 @@
+notes from instructions page and ta tips:
+
+
+Mark the client/src/test/java directory as Test sources root by right clicking on the folder and selecting the Mark Directory as option. This enables IntelliJ to run this code as tests.
+
+Your ServerFacade is probably not in a package. Put it in a package (probably not your UI package, is it a UI class?) and you should be able to import it
+
+Make sure the unit tests are in client/src/test/java/client and the Class ends with the word Tests or Test.
