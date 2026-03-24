@@ -6,3 +6,14 @@ Mark the client/src/test/java directory as Test sources root by right clicking o
 Your ServerFacade is probably not in a package. Put it in a package (probably not your UI package, is it a UI class?) and you should be able to import it
 
 Make sure the unit tests are in client/src/test/java/client and the Class ends with the word Tests or Test.
+
+
+Requirements:
+Prelogin UI
+When the user first opens your Chess client application they can execute any of the Prelogin commands.
+
+Command	Description
+Help	Displays text informing the user what actions they can take.
+Quit	Exits the program.
+Login	Prompts the user to input login information. Calls the server login API to login the user. When successfully logged in, the client should transition to the Postlogin UI.
+Register	Prompts the user to input registration information. Calls the server register API to register and login the user. If successfully registered, the client should be logged in and transition to the Postlogin UI.
