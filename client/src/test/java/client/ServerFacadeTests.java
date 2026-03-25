@@ -27,8 +27,9 @@ public class ServerFacadeTests {
         facade.clear();
     }
 
+
     @Test
-    public void sampleTest() {
+    public void registerTest() { //stub
         Assertions.assertTrue(true);
     }
 
