@@ -78,10 +78,45 @@ public class PreLoginUI {
 
     void findCommandKeyword(String userInput){return;}
 
-    void handleRegister(){return;}
 
-    void handleLogin(){return;}
+    private PreLoginResult handleRegister() {
+        System.out.print("Username: ");
+        String username = scanner.nextLine().trim();
+        System.out.print("Password: ");
+        String password = scanner.nextLine().trim();
+        if (username.isEmpty() || password.isEmpty()) {
+            System.out.println("Username and password cannot be empty.");
+            return PreLoginResult.continuePrelogin();
+        }
+        try {
+            ServerFacade.RegisterResult result = serverFacade.register(username, password);
+            SessionData session = new SessionData(result.username(), result.authToken());
+            System.out.println("Registration successful!");
+            return PreLoginResult.loggedIn(session);
+        } catch (ServerFacade.ServerFacadeException e) {
+            System.out.println("registration failed -> " + e.getMessage());
+            return PreLoginResult.continuePrelogin();
+        }
+    }
 
 
-    
+    private PreLoginResult handleLogin() {
+        System.out.print("Username: ");
+        String username = scanner.nextLine().trim();
+        System.out.print("Password: ");
+        String password = scanner.nextLine().trim();
+        if (username.isEmpty() || password.isEmpty()) {
+            System.out.println("Username and password cannot be empty.");
+            return PreLoginResult.continuePrelogin();
+        }
+        try {
+            ServerFacade.LoginResult result = serverFacade.login(username, password);
+            SessionData session = new SessionData(result.username(), result.authToken());
+            System.out.println("Login successful!");
+            return PreLoginResult.loggedIn(session);
+        } catch (ServerFacade.ServerFacadeException e) {
+            System.out.println("Login failed: " + e.getMessage());
+            return PreLoginResult.continuePrelogin();
+        }
+    }
 }
