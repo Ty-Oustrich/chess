@@ -8,16 +8,19 @@ public class PreLoginUI {
         Scanner scanner = new Scanner(System.in);
         while(true){
             System.out.print(">>> : ");
-            scanner.nextLine();
-            System.out.print(">>> : ");
-
-            break;
+            String line = scanner.nextLine();
+            boolean thereIsInput = processCommand(line);
+            if (!thereIsInput) break;
         }
-        return;}
+    }
 
     void printerPreLogin(){return;}
 
-    void processCommand(String userInput){return;}
+    boolean processCommand(String userInput) {
+        String trimmedInput = userInput == null ? "" : userInput.trim();
+        if (trimmedInput.equalsIgnoreCase("quit")) return false;
+        return true;
+    }
 
     void findCommandKeyword(String userInput){return;}
 
