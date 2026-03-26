@@ -1,7 +1,19 @@
 package client;
+import java.util.Scanner;
+
 
 public class PreLoginUI {
-    void preLoginLoop(){return;}
+    void preLoginLoop(){
+        System.out.println("Welcome to my chess server, you will need to type commands. Type 'help' for help");
+        Scanner scanner = new Scanner(System.in);
+        while(true){
+            System.out.print(">>> : ");
+            scanner.nextLine();
+            System.out.print(">>> : ");
+
+            break;
+        }
+        return;}
 
     void printerPreLogin(){return;}
 
