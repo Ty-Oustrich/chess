@@ -25,6 +25,20 @@ public class ServerFacade {
         this("localhost", port);
     }
 
+    private HttpRequest buildPostRequest(String path, String bodyJson) {
+        URI uri = URI.create(baseUrl + path);
+        Duration timeout = Duration.ofSeconds(REQUEST_TIMEOUT_SECONDS);
+        HttpRequest.BodyPublisher body = HttpRequest.BodyPublishers.ofString(bodyJson);
+
+        return HttpRequest.newBuilder()
+                .uri(uri)
+                .timeout(timeout)
+                .header("Content-Type", "application/json")
+                .POST(body)
+                .build();
+
+    }
+
     public ServerFacade(String host, int port) {
         HttpClient.Builder httpClientBuilder = HttpClient.newBuilder();
         Duration connectTimeout = Duration.ofSeconds(CONNECT_TIMEOUT_SECONDS);
@@ -34,100 +48,54 @@ public class ServerFacade {
         this.httpClient = builtHttpClient;
         this.gson = new Gson();
 
+
+
         String builtBaseUrl = "http://" + host + ":" + port;
         this.baseUrl = builtBaseUrl;
     }
 
     public RegisterResult register(String username, String password, String email) {
         RegisterRequest registerRequest = new RegisterRequest(username, password, email);
-        String registrationJson = gson.toJson(registerRequest);
-        HttpRequest registrationRequest = buildRegistrationRequest(registrationJson);
-        HttpResponse<String> registrationResponse = send(registrationRequest, "register user");
-
-        int statusCode = registrationResponse.statusCode();
-        String registrationResponseJson = registrationResponse.body();
-        boolean isSuccessStatus = statusCode >= 200 && statusCode < 300;
-        if (isSuccessStatus) {
-            RegisterResult registerResult = gson.fromJson(registrationResponseJson, RegisterResult.class);
-            return registerResult;
-        }
-
-        String errorMessage = extractErrorMessage(registrationResponseJson);
-        throw new ServerFacadeException(statusCode, errorMessage);
+        HttpRequest request = buildPostRequest(REGISTER_PATH, gson.toJson(registerRequest));
+        HttpResponse<String> response = send(request, "register user");
+        return parseResponse(response, RegisterResult.class);
     }
+
     public LoginResult login(String username, String password) {
         LoginRequest loginRequest = new LoginRequest(username, password);
-        String loginJson = gson.toJson(loginRequest);
-        HttpRequest request = buildLoginRequest(loginJson);
-        HttpResponse<String> loginResponse = send(request, "login user");
-    
-        int statusCode = loginResponse.statusCode();
-        String loginResponseJson = loginResponse.body();
-        boolean isSuccessStatus = statusCode >= 200 && statusCode < 300;
-        if (isSuccessStatus) {
-            LoginResult loginResult = gson.fromJson(loginResponseJson, LoginResult.class);
-            return loginResult;
-        }
-    
-        String errorMessage = extractErrorMessage(loginResponseJson);
-        throw new ServerFacadeException(statusCode, errorMessage);
+        HttpRequest request = buildPostRequest(LOGIN_PATH, gson.toJson(loginRequest));
+        HttpResponse<String> response = send(request, "login user");
+        return parseResponse(response, LoginResult.class);
     }
-
 
     public void clear() {
-        HttpRequest clearRequest = buildClearRequest();
-        HttpResponse<String> clearResponse = send(clearRequest, "clear database");
-
-        int statusCode = clearResponse.statusCode();
-        boolean isSuccessStatus = statusCode >= 200 && statusCode < 300;
-        if (isSuccessStatus) return;
-
-        String errorMessage = extractErrorMessage(clearResponse.body());
-        throw new ServerFacadeException(statusCode, errorMessage);
+        HttpRequest request = buildDeleteRequest(CLEAR_PATH);
+        HttpResponse<String> response = send(request, "clear database");
+        int statusCode = response.statusCode();
+        if (statusCode >= 200 && statusCode < 300) return;
+        throw new ServerFacadeException(statusCode, extractErrorMessage(response.body()));
     }
 
-    private HttpRequest buildRegistrationRequest(String registrationJson) {
-        String registrationUrl = baseUrl + REGISTER_PATH;
-        URI registrationUri = URI.create(registrationUrl);
-        Duration requestTimeout = Duration.ofSeconds(REQUEST_TIMEOUT_SECONDS);
-        HttpRequest.BodyPublisher requestBodyPublisher = HttpRequest.BodyPublishers.ofString(registrationJson);
 
-        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder();
-        requestBuilder = requestBuilder.uri(registrationUri);
-        requestBuilder = requestBuilder.timeout(requestTimeout);
-        requestBuilder = requestBuilder.header("Content-Type", "application/json");
 
-        HttpRequest request = requestBuilder.POST(requestBodyPublisher).build();
-        return request;
+    private HttpRequest buildDeleteRequest(String path) {
+        URI uri = URI.create(baseUrl + path);
+        Duration timeout = Duration.ofSeconds(REQUEST_TIMEOUT_SECONDS);
+
+        return HttpRequest.newBuilder()
+                .uri(uri)
+                .timeout(timeout)
+                .header("Content-Type", "application/json")
+                .DELETE()
+                .build();
     }
 
-    private HttpRequest buildLoginRequest(String loginJson) {
-        String loginUrl = baseUrl + LOGIN_PATH;
-        URI loginUri = URI.create(loginUrl);
-        Duration requestTimeout = Duration.ofSeconds(REQUEST_TIMEOUT_SECONDS);
-        HttpRequest.BodyPublisher requestBodyPublisher = HttpRequest.BodyPublishers.ofString(loginJson);
-    
-        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder();
-        requestBuilder = requestBuilder.uri(loginUri);
-        requestBuilder = requestBuilder.timeout(requestTimeout);
-        requestBuilder = requestBuilder.header("Content-Type", "application/json");
-    
-        HttpRequest request = requestBuilder.POST(requestBodyPublisher).build();
-        return request;
-    }
-
-    private HttpRequest buildClearRequest() {
-        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder();
-        String clearUrl = baseUrl + CLEAR_PATH;
-        URI clearUri = URI.create(clearUrl);
-        Duration requestTimeout = Duration.ofSeconds(REQUEST_TIMEOUT_SECONDS);
-
-        requestBuilder = requestBuilder.uri(clearUri);
-        requestBuilder = requestBuilder.timeout(requestTimeout);
-        requestBuilder = requestBuilder.header("Content-Type", "application/json");
-
-        HttpRequest request = requestBuilder.DELETE().build();
-        return request;
+    /** Parses a good response into  given type or throws error code. */
+    private <T> T parseResponse(HttpResponse<String> response, Class<T> resultClass) {
+        int statusCode = response.statusCode();
+        if (statusCode >= 200 && statusCode < 300)
+            return gson.fromJson(response.body(), resultClass);
+        throw new ServerFacadeException(statusCode, extractErrorMessage(response.body()));
     }
 
     private String extractErrorMessage(String responseJson) {
@@ -146,11 +114,12 @@ public class ServerFacade {
             );
             return response;
         } catch (IOException e) {
-            throw new ServerFacadeException(0, "Network error while attempting to " + action);
+            throw new ServerFacadeException(0, "error while attempting to " + action);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new ServerFacadeException(0, "Request interrupted while attempting to " + action);
+            throw new ServerFacadeException(0, "request interrupted while attempting to " + action);
         }
+
     }
 
     public record RegisterRequest(String username, String password, String email) {
@@ -163,6 +132,9 @@ public class ServerFacade {
     }
 
     public record LoginRequest(String username, String password) {
+    }
+
+    public record LoginResult(String username, String authToken) {
     }
 
     public static class ServerFacadeException extends RuntimeException {
