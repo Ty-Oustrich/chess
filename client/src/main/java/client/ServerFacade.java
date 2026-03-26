@@ -15,6 +15,7 @@ public class ServerFacade {
     private static final int REQUEST_TIMEOUT_SECONDS = 10;
     private static final String REGISTER_PATH = "/user";
     private static final String CLEAR_PATH = "/db";
+    private static final String LOGIN_PATH = "/session";
 
     private final HttpClient httpClient;
     private final Gson gson;
@@ -54,6 +55,24 @@ public class ServerFacade {
         String errorMessage = extractErrorMessage(registrationResponseJson);
         throw new ServerFacadeException(statusCode, errorMessage);
     }
+    public LoginResult login(String username, String password) {
+        LoginRequest loginRequest = new LoginRequest(username, password);
+        String loginJson = gson.toJson(loginRequest);
+        HttpRequest request = buildLoginRequest(loginJson);
+        HttpResponse<String> loginResponse = send(request, "login user");
+    
+        int statusCode = loginResponse.statusCode();
+        String loginResponseJson = loginResponse.body();
+        boolean isSuccessStatus = statusCode >= 200 && statusCode < 300;
+        if (isSuccessStatus) {
+            LoginResult loginResult = gson.fromJson(loginResponseJson, LoginResult.class);
+            return loginResult;
+        }
+    
+        String errorMessage = extractErrorMessage(loginResponseJson);
+        throw new ServerFacadeException(statusCode, errorMessage);
+    }
+
 
     public void clear() {
         HttpRequest clearRequest = buildClearRequest();
@@ -78,6 +97,21 @@ public class ServerFacade {
         requestBuilder = requestBuilder.timeout(requestTimeout);
         requestBuilder = requestBuilder.header("Content-Type", "application/json");
 
+        HttpRequest request = requestBuilder.POST(requestBodyPublisher).build();
+        return request;
+    }
+
+    private HttpRequest buildLoginRequest(String loginJson) {
+        String loginUrl = baseUrl + LOGIN_PATH;
+        URI loginUri = URI.create(loginUrl);
+        Duration requestTimeout = Duration.ofSeconds(REQUEST_TIMEOUT_SECONDS);
+        HttpRequest.BodyPublisher requestBodyPublisher = HttpRequest.BodyPublishers.ofString(loginJson);
+    
+        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder();
+        requestBuilder = requestBuilder.uri(loginUri);
+        requestBuilder = requestBuilder.timeout(requestTimeout);
+        requestBuilder = requestBuilder.header("Content-Type", "application/json");
+    
         HttpRequest request = requestBuilder.POST(requestBodyPublisher).build();
         return request;
     }
@@ -126,6 +160,9 @@ public class ServerFacade {
     }
 
     public record ErrorResponse(String message) {
+    }
+
+    public record LoginRequest(String username, String password) {
     }
 
     public static class ServerFacadeException extends RuntimeException {
