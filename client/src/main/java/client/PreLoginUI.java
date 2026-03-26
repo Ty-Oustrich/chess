@@ -1,4 +1,5 @@
 package client;
+
 import java.util.Scanner;
 
 
@@ -18,8 +19,39 @@ public class PreLoginUI {
 
     boolean processCommand(String userInput) {
         String trimmedInput = userInput == null ? "" : userInput.trim();
-        if (trimmedInput.equalsIgnoreCase("quit")) return false;
-        return true;
+        if (trimmedInput.isEmpty()) {
+            System.out.println("enter a command please");
+            return true;
+        }
+        String[] tokens = trimmedInput.split("\\s+");
+        String command = tokens[0].toLowerCase();
+        return switch (command) {
+            case "help" -> {
+                printHelp();
+                yield true;
+            }
+            case "quit" -> false;
+            
+            case "login" -> {
+                handleLogin();
+                yield true;
+            }
+            case "register" -> {
+                handleRegister();
+                yield true;
+            }
+            default -> {
+                System.out.println("invalid token, type 'help' for a list of commands");
+                yield true;
+            }
+        };
+    }
+
+    private void printHelp() {
+        System.out.println("register - create an account");
+        System.out.println("login    - sign in");
+        System.out.println("help     - show this message");
+        System.out.println("quit     - exit");
     }
 
     void findCommandKeyword(String userInput){return;}
