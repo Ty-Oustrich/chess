@@ -80,16 +80,17 @@ public class PreLoginUI {
 
 
     private PreLoginResult handleRegister() {
-        System.out.print("Username: ");
-        String username = scanner.nextLine().trim();
-        System.out.print("Password: ");
-        String password = scanner.nextLine().trim();
-        if (username.isEmpty() || password.isEmpty()) {
-            System.out.println("Username and password cannot be empty.");
+        System.out.print("Enter username, password, and email ");
+        String[] parts = scanner.nextLine().trim().split("\\s+");
+        if (parts.length != 3) {
+            System.out.println("Please provide {username} {password} {email}");
             return PreLoginResult.continuePrelogin();
         }
+        String username = parts[0];
+        String password = parts[1];
+        String email = parts[2];
         try {
-            ServerFacade.RegisterResult result = serverFacade.register(username, password);
+            ServerFacade.RegisterResult result = serverFacade.register(username, password, email);
             SessionData session = new SessionData(result.username(), result.authToken());
             System.out.println("Registration successful!");
             return PreLoginResult.loggedIn(session);

@@ -62,10 +62,6 @@ public class ServerFacade {
     }
 
 
-    public RegisterResult register(String username, String password) {
-        return register(username, password);
-    }
-
     public LoginResult login(String username, String password) {
         LoginRequest loginRequest = new LoginRequest(username, password);
         HttpRequest request = buildPostRequest(LOGIN_PATH, gson.toJson(loginRequest));
