@@ -31,24 +31,15 @@ public class JoinGameHandler {
             ctx.status(200);
             ctx.result("{}");
         } catch (JsonSyntaxException e) {
-            sendError(ctx, 400, "Error: bad request");
+            HandlerResponseUtil.sendError(ctx, gson, 400, "Error: bad request");
         } catch (BadRequestException e) {
-            sendError(ctx, 400, "Error: bad request");
+            HandlerResponseUtil.sendError(ctx, gson, 400, "Error: bad request");
         } catch (UnauthorizedException e) {
-            sendError(ctx, 401, "Error: unauthorized");
+            HandlerResponseUtil.sendError(ctx, gson, 401, "Error: unauthorized");
         } catch (AlreadyTakenException e) {
-            sendError(ctx, 403, "Error: already taken");
+            HandlerResponseUtil.sendError(ctx, gson, 403, "Error: already taken");
         } catch (Exception e) {
-            sendError(ctx, 500, "Error: " + e.getMessage());
+            HandlerResponseUtil.sendError(ctx, gson, 500, "Error: " + e.getMessage());
         }
     }
-
-    private void sendError(Context ctx, int status, String message) {
-        String errorJson = gson.toJson(new ErrorResponse(message));
-        ctx.contentType("application/json");
-        ctx.status(status);
-        ctx.result(errorJson);
-    }
-
-    record ErrorResponse(String message) {}
 }

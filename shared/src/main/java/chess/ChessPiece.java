@@ -125,31 +125,7 @@ public Collection<ChessMove> queenMoves(ChessBoard board, ChessPosition startPos
      */
     public Collection<ChessMove> rookMoves(ChessBoard board, ChessPosition startPosition) {
         int [][] rookDirs = {{1,0},{-1,0},{0,1}, {0,-1}};
-        ChessPiece currPiece = board.getPiece(startPosition);
-        Collection<ChessMove> possibleMoves = new ArrayList<>();
-
-        int currentRow = startPosition.getRow();
-        int currentCol = startPosition.getColumn();
-        for (int[] rookDir : rookDirs) {
-            int x = rookDir[0];
-            int y = rookDir[1];
-            int nextCol = currentCol + x;
-            int nextRow = currentRow + y;
-            while (inBounds(nextCol, nextRow)) {
-                ChessPosition move = new ChessPosition(nextRow, nextCol);
-                ChessPiece targetPiece = board.getPiece(move);
-                if (targetPiece != null) { //if piece is filled
-                    if (targetPiece.pieceColor != currPiece.pieceColor) { //if different color
-                        possibleMoves.add(new ChessMove(startPosition, move, null));
-                    }
-                    break;
-                }
-                possibleMoves.add(new ChessMove(startPosition, move, null));
-                nextCol += x;
-                nextRow += y;
-            }
-        }
-        return possibleMoves;
+        return slidingMoves(board, startPosition, rookDirs);
     }
 
     /**
@@ -157,28 +133,34 @@ public Collection<ChessMove> queenMoves(ChessBoard board, ChessPosition startPos
      */
     public Collection<ChessMove> bishopMoves(ChessBoard board, ChessPosition startPosition) {
         int[][] bishDirs = {{-1,-1}, {-1,1}, {1,-1}, {1,1}};
-        ChessPiece currPiece = board.getPiece(startPosition);
+        return slidingMoves(board, startPosition, bishDirs);
+    }
+
+    private Collection<ChessMove> slidingMoves(ChessBoard board, ChessPosition startPosition, int[][] directions) {
+        ChessPiece currentPiece = board.getPiece(startPosition);
         Collection<ChessMove> possibleMoves = new ArrayList<>();
 
-        int currentRow = startPosition.getRow();
-        int currentCol = startPosition.getColumn();
-        for (int[] bDir : bishDirs) {
-            int x = bDir[0];
-            int y = bDir[1];
-            int nextCol = currentCol + x;
-            int nextRow = currentRow + y;
+        int startRow = startPosition.getRow();
+        int startCol = startPosition.getColumn();
+
+        for (int[] direction : directions) {
+            int rowStep = direction[0];
+            int colStep = direction[1];
+            int nextRow = startRow + rowStep;
+            int nextCol = startCol + colStep;
+
             while (inBounds(nextCol, nextRow)) {
                 ChessPosition move = new ChessPosition(nextRow, nextCol);
                 ChessPiece targetPiece = board.getPiece(move);
                 if (targetPiece != null) {
-                    if (targetPiece.pieceColor != currPiece.pieceColor) {
+                    if (targetPiece.pieceColor != currentPiece.pieceColor) {
                         possibleMoves.add(new ChessMove(startPosition, move, null));
                     }
                     break;
                 }
                 possibleMoves.add(new ChessMove(startPosition, move, null));
-                nextCol += x;
-                nextRow += y;
+                nextRow += rowStep;
+                nextCol += colStep;
             }
         }
         return possibleMoves;

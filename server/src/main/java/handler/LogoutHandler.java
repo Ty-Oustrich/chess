@@ -21,18 +21,9 @@ public class LogoutHandler {
             ctx.contentType("application/json");
             ctx.result("{}");
         } catch (UnauthorizedException e) {
-            sendError(ctx, 401, "Error: unauthorized");
+            HandlerResponseUtil.sendError(ctx, gson, 401, "Error: unauthorized");
         } catch (Exception e) {
-            sendError(ctx, 500, "Error: " + e.getMessage());
+            HandlerResponseUtil.sendError(ctx, gson, 500, "Error: " + e.getMessage());
         }
     }
-
-    private void sendError(Context ctx, int statusCode, String message) {
-        String errorJson = gson.toJson(new ErrorResponse(message));
-        ctx.status(statusCode);
-        ctx.contentType("application/json");
-        ctx.result(errorJson);
-    }
-
-    record ErrorResponse(String message) {}
 }

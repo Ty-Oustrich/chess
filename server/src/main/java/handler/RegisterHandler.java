@@ -30,22 +30,13 @@ public class RegisterHandler {
             ctx.contentType("application/json");
             ctx.result(responseJson);
         } catch (JsonSyntaxException e) {
-            sendError(ctx, 400, "Error: bad request");
+            HandlerResponseUtil.sendError(ctx, gson, 400, "Error: bad request");
         } catch (BadRequestException e) {
-            sendError(ctx, 400, "Error: bad request");
+            HandlerResponseUtil.sendError(ctx, gson, 400, "Error: bad request");
         } catch (AlreadyTakenException e) {
-            sendError(ctx, 403, "Error: already taken");
+            HandlerResponseUtil.sendError(ctx, gson, 403, "Error: already taken");
         } catch (Exception e) {
-            sendError(ctx, 500, "Error: " + e.getMessage());
+            HandlerResponseUtil.sendError(ctx, gson, 500, "Error: " + e.getMessage());
         }
     }
-
-    private void sendError(Context ctx, int status, String message) {
-        String errorJson = gson.toJson(new ErrorResponse(message));
-        ctx.status(status);
-        ctx.contentType("application/json");
-        ctx.result(errorJson);
-    }
-
-    record ErrorResponse(String message) {}
 }

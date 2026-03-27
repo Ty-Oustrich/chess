@@ -123,8 +123,7 @@ public class ChessGame {
      */
     public boolean isInCheck(TeamColor teamColor) { //can also place a queen and knight in the kings place then check if they can take any piece?? if this doesnt work?
         ChessPosition kingPosition = null;
-        Collection<ChessPosition> enemyPieces = new ArrayList<>();
-        //find king
+        // find king
         for(int row = 1; row <= 8; row++){
             for(int col = 1; col <= 8; col++){
                 ChessPosition pos = new ChessPosition(row, col);
@@ -135,20 +134,24 @@ public class ChessGame {
                 }
             }
         }
-        //find all enemy pieces
+        if (kingPosition == null) {
+            return false;
+        }
+
+        // find all enemy moves that hit king
         for(int row = 1; row <= 8; row++){
             for(int col = 1; col <= 8; col++){
                 ChessPosition pos = new ChessPosition(row, col);
                 ChessPiece piece = board.getPiece(pos);
-                if(piece == null){continue;}
-                if(piece.getTeamColor() != teamColor){
-                enemyPieces.add(new ChessPosition(row,col));
-
-                for(ChessMove potentialCheckMove : piece.pieceMoves(board, new ChessPosition(row, col))){
-                   if(potentialCheckMove.getEndPosition().equals(kingPosition)){
-                       return true;
-                   }
+                if (piece == null || piece.getTeamColor() == teamColor) {
+                    continue;
                 }
+
+                ChessPosition enemyPosition = new ChessPosition(row, col);
+                for (ChessMove potentialCheckMove : piece.pieceMoves(board, enemyPosition)) {
+                    if (potentialCheckMove.getEndPosition().equals(kingPosition)) {
+                        return true;
+                    }
                 }
             }
         }
