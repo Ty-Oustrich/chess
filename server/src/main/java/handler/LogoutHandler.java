@@ -1,11 +1,13 @@
 package handler;
 
+import com.google.gson.Gson;
 import io.javalin.http.Context;
 import service.UnauthorizedException;
 import service.UserService;
 
 public class LogoutHandler {
     private final UserService userService;
+    private final Gson gson = new Gson();
 
     public LogoutHandler(UserService userService) {
         this.userService = userService;
@@ -19,16 +21,17 @@ public class LogoutHandler {
             ctx.contentType("application/json");
             ctx.result("{}");
         } catch (UnauthorizedException e) {
-            writeError(ctx, 401, "Error: unauthorized");
+            sendError(ctx, 401, "Error: unauthorized");
         } catch (Exception e) {
-            writeError(ctx, 500, "Error: " + e.getMessage());
+            sendError(ctx, 500, "Error: " + e.getMessage());
         }
     }
 
-    private void writeError(Context ctx, int statusCode, String message) {
+    private void sendError(Context ctx, int statusCode, String message) {
+        String errorJson = gson.toJson(new ErrorResponse(message));
         ctx.status(statusCode);
         ctx.contentType("application/json");
-        ctx.json(new ErrorResponse(message));
+        ctx.result(errorJson);
     }
 
     record ErrorResponse(String message) {}

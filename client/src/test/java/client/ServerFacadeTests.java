@@ -31,7 +31,7 @@ public class ServerFacadeTests {
 
     @Test
     public void registerPositive() {
-        var result = facade.register("user", "p@s123", "reg@test.com");
+        var result = facade.register("user", "pass", "user@test.com");
         assertEquals("user", result.username());
         assertNotNull(result.authToken());
         assertFalse(result.authToken().isBlank());
@@ -40,33 +40,55 @@ public class ServerFacadeTests {
     // duplicate username should fail
     @Test
     public void registerNegativeDuplicateReturnsForbidden() {
-        facade.register("duplicate-user", "p123", "dup@test.com");
+        facade.register("user", "pass", "user@test.com");
 
         ServerFacade.ServerFacadeException ex = assertThrows(
                 ServerFacade.ServerFacadeException.class,
-                () -> facade.register("duplicate-user", "p123", "dup@test.com"));
+                () -> facade.register("user", "pass", "user@test.com"));
         assertEquals(403, ex.statusCode());
     }
 
     @Test
     public void loginPositiveReturnsAuthAndUsername() {
-        facade.register("login-user", "my-password", "login@test.com");
+        facade.register("user", "pass", "user@test.com");
 
-        ServerFacade.LoginResult result = facade.login("login-user", "my-password");
-        assertEquals("login-user", result.username());
+        ServerFacade.LoginResult result = facade.login("user", "pass");
+        assertEquals("user", result.username());
         assertNotNull(result.authToken());
     }
 
 
     @Test
     public void loginNegativeBadPasswordReturnsUnauthorized() {
-        facade.register("bad-creds-user", "correct-password", "bad-creds@test.com");
+        facade.register("user", "pass", "user@test.com");
         var exception = assertThrows(
                 ServerFacade.ServerFacadeException.class,
-                () -> facade.login("bad-creds-user", "wrong-password")
+                () -> facade.login("user", "wrong-pass")
         );
 
         assertEquals(401, exception.statusCode());
+    }
+
+    @Test
+    public void clearPositiveRemovesExistingData() {
+        facade.register("user", "pass", "user@test.com");
+        facade.clear();
+
+        assertDoesNotThrow(() ->
+            facade.register("user", "pass", "user@test.com")
+        );
+    }
+
+    @Test
+    public void clearNegativeThrowsServerFacadeException() {
+        ServerFacade badFacade = new ServerFacade("localhost", 1);
+
+        var exception = assertThrows(
+            ServerFacade.ServerFacadeException.class,
+            badFacade::clear
+        );
+
+        assertEquals(0, exception.statusCode());
     }
 
 }
