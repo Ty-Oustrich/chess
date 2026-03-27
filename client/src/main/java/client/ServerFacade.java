@@ -157,7 +157,9 @@ public class ServerFacade {
 
     private void requireSuccess(HttpResponse<String> response) {
         int statusCode = response.statusCode();
-        if (statusCode >= 200 && statusCode < 300) return;
+        if (statusCode >= 200 && statusCode < 300) {
+            return;
+        }
         throw new ServerFacadeException(statusCode, extractErrorMessage(response.body()));
     }
 

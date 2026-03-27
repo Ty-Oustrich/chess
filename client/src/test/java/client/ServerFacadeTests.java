@@ -91,4 +91,102 @@ public class ServerFacadeTests {
         assertEquals(0, exception.statusCode());
     }
 
+    @Test
+    public void logoutPositiveInvalidatesToken() {
+        var reg = facade.register("user", "pass", "user@test.com");
+        assertDoesNotThrow(() -> facade.logout(reg.authToken()));
+    }
+
+    // second logout should be rejected
+    @Test
+    public void logoutNegativeSecondLogoutReturnsUnauthorized() {
+        var reg = facade.register("user", "pass", "user@test.com");
+        facade.logout(reg.authToken());
+
+        var ex = assertThrows(
+            ServerFacade.ServerFacadeException.class,
+            () -> facade.logout(reg.authToken())
+        );
+        assertEquals(401, ex.statusCode());
+    }
+
+    @Test
+    public void createGamePositiveReturnsGameId() {
+        var token = createRegisteredUserAndReturnAuthToken("creator");
+
+        var result = facade.createGame(token, "test-game");
+
+        assertNotNull(result);
+        assertNotNull(result.gameID());
+        assertTrue(result.gameID() > 0);
+    }
+
+    @Test
+    public void createGameNegativeBadAuthReturnsUnauthorized() {
+        createRegisteredUserAndReturnAuthToken("creator");
+
+        var ex = assertThrows(
+            ServerFacade.ServerFacadeException.class,
+            () -> facade.createGame("invalid-token", "test-game")
+        );
+        assertEquals(401, ex.statusCode());
+    }
+
+    @Test
+    public void listGamesPositiveReturnsCreatedGame() {
+        var auth = createRegisteredUserAndReturnAuthToken("lister");
+        var created = facade.createGame(auth, "alpha");
+
+        var games = facade.listGames(auth);
+
+        assertNotNull(games);
+        assertNotNull(games.games());
+        assertEquals(1, games.games().size());
+        var first = games.games().get(0);
+        assertEquals(created.gameID(), first.gameID());
+        assertEquals("alpha", first.gameName());
+    }
+
+    @Test
+    public void listGamesNegativeBadAuthReturnsUnauthorized() {
+        createRegisteredUserAndReturnAuthToken("lister");
+
+        var exception = assertThrows(
+            ServerFacade.ServerFacadeException.class,
+            () -> facade.listGames("invalid-token")
+        );
+        assertEquals(401, exception.statusCode());
+    }
+
+    @Test
+    public void joinGamePositiveAssignsWhitePlayer() {
+        var auth = createRegisteredUserAndReturnAuthToken("joiner");
+        var newGame = facade.createGame(auth, "joinable");
+
+        assertDoesNotThrow(() -> facade.joinGame(auth, "WHITE", newGame.gameID()));
+
+        var list = facade.listGames(auth);
+        assertNotNull(list.games());
+        assertEquals(1, list.games().size());
+        assertEquals("joiner", list.games().get(0).whiteUsername());
+    }
+
+    @Test
+    public void joinGameNegativeBadAuthReturnsUnauthorized() {
+        var auth = createRegisteredUserAndReturnAuthToken("joiner");
+        var created = facade.createGame(auth, "joinable");
+
+        var ex = assertThrows(
+            ServerFacade.ServerFacadeException.class,
+            () -> facade.joinGame("invalid-token", "WHITE", created.gameID())
+        );
+        assertEquals(401, ex.statusCode());
+    }
+
+    private String createRegisteredUserAndReturnAuthToken(String username) {
+        var email = username + "@test.com";
+        var result = facade.register(username, "pass", email);
+        return result.authToken();
+    }
+
 }
