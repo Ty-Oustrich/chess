@@ -5,10 +5,8 @@ import java.util.Scanner;
 
 public class PreLoginUI {
 
-    /**
-     * Result of one prelogin command: keep reading commands, quit the app, or hand off to postlogin.
-     */
-    private record PreLoginResult(boolean keepPreloginLoop, SessionData sessionIfLoggedIn) {
+
+    record PreLoginResult(boolean keepPreloginLoop, SessionData sessionIfLoggedIn) {
         static PreLoginResult continuePrelogin() {
             return new PreLoginResult(true, null);
         }
@@ -26,14 +24,17 @@ public class PreLoginUI {
     private Scanner scanner;
 
     public PreLoginUI(ServerFacade serverFacade) {
+        this(serverFacade, new Scanner(System.in));
+    }
+
+    PreLoginUI(ServerFacade serverFacade, Scanner scanner) {
         this.serverFacade = serverFacade;
+        this.scanner = scanner;
     }
 
 
     SessionData preLoginLoop() {
         System.out.println("Welcome to my chess server, you will need to type commands. Type 'help' for help");
-        Scanner scanner = new Scanner(System.in);
-        this.scanner = scanner;
         while (true) {
             System.out.print(">>> : ");
             String line = scanner.nextLine();
