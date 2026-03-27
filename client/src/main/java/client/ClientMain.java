@@ -18,7 +18,7 @@ public class ClientMain {
         }
 
         System.out.println("You are now logged in.");
-        PostLoginUI postLoginUI = new PostLoginUI();
+        PostLoginUI postLoginUI = new PostLoginUI(serverFacade);
         postLoginUI.postLoginLoop(session);
     }
 }

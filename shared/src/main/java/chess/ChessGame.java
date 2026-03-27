@@ -121,7 +121,9 @@ public class ChessGame {
      * @param teamColor which team to check for check
      * @return True if the specified team is in check
      */
-    public boolean isInCheck(TeamColor teamColor) { //can also place a queen and knight in the kings place then check if they can take any piece?? if this doesnt work?
+    // alt approach: place queen+knight on king's square,
+    //  check if they can capture any enemy piece
+    public boolean isInCheck(TeamColor teamColor) {
         ChessPosition kingPosition = null;
         // find king
         for(int row = 1; row <= 8; row++){
