@@ -45,8 +45,6 @@ public class PreLoginUI {
         }
     }
 
-    void printerPreLogin(){return;}
-
     PreLoginResult processCommand(String userInput) {
         String trimmedInput = userInput == null ? "" : userInput.trim();
         if (trimmedInput.isEmpty()) {
@@ -76,9 +74,6 @@ public class PreLoginUI {
         System.out.println("help     - show this message");
         System.out.println("quit     - exit");
     }
-
-    void findCommandKeyword(String userInput){return;}
-
 
     private PreLoginResult handleRegister() {
         System.out.print("Enter username, password, and email ");

@@ -63,7 +63,8 @@ public class GameService {
         return new CreateGameResult(generatedGameID);
     }
 
-    public void joinGame(String authToken, String playerColor, Integer gameID) throws DataAccessException, UnauthorizedException, BadRequestException, AlreadyTakenException {
+    public void joinGame(String authToken, String playerColor, Integer gameID)
+            throws DataAccessException, UnauthorizedException, BadRequestException, AlreadyTakenException {
         AuthData authData = validateAuthToken(authToken);
         boolean isMissingAuthData = authData == null;
         if (isMissingAuthData) {

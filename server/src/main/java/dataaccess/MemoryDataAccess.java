@@ -57,8 +57,9 @@ public class MemoryDataAccess implements DataAccess {
 
     public void updateGame(GameData game) throws DataAccessException {
         int gameId = game.gameID();
-        if (!games.containsKey(gameId))
+        if (!games.containsKey(gameId)) {
             throw new DataAccessException("failed to update game");
+        }
         games.put(gameId, game);
     }
 

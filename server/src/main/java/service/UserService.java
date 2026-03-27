@@ -15,15 +15,20 @@ public class UserService {
     }
 
     public LoginResult login(LoginRequest request) throws DataAccessException, BadRequestException, UnauthorizedException {
-        if (request == null) throw new BadRequestException();
+        if (request == null) {
+            throw new BadRequestException();
+        }
 
         String username = request.username();
         String password = request.password();
 
-        if (username == null || username.isBlank() || password == null || password.isBlank())
+        if (username == null || username.isBlank() || password == null || password.isBlank()) {
             throw new BadRequestException();
+        }
 
-        if (!verifyUser(username, password)) throw new UnauthorizedException();
+        if (!verifyUser(username, password)) {
+            throw new UnauthorizedException();
+        }
 
         String token = UUID.randomUUID().toString();
         dataAccess.createAuth(new AuthData(token, username));
@@ -33,16 +38,22 @@ public class UserService {
 
     public RegisterResult register(RegisterRequest request)
             throws DataAccessException, BadRequestException, AlreadyTakenException {
-        if (request == null) throw new BadRequestException();
+        if (request == null) {
+            throw new BadRequestException();
+        }
 
         String username = request.username();
         String password = request.password();
         String email = request.email();
 
-        if (username == null || username.isBlank() || password == null || password.isBlank() || email == null || email.isBlank())
+        if (username == null || username.isBlank() || password == null || password.isBlank()
+                || email == null || email.isBlank()) {
             throw new BadRequestException();
+        }
 
-        if (dataAccess.getUser(username) != null) throw new AlreadyTakenException();
+        if (dataAccess.getUser(username) != null) {
+            throw new AlreadyTakenException();
+        }
 
         String passwordHash = hashPassword(password);
         UserData userToCreate = new UserData(username, passwordHash, email);
@@ -55,8 +66,12 @@ public class UserService {
     }
 
     public void logout(String authToken) throws DataAccessException, UnauthorizedException {
-        if (authToken == null || authToken.isBlank()) throw new UnauthorizedException();
-        if (dataAccess.getAuth(authToken) == null) throw new UnauthorizedException();
+        if (authToken == null || authToken.isBlank()) {
+            throw new UnauthorizedException();
+        }
+        if (dataAccess.getAuth(authToken) == null) {
+            throw new UnauthorizedException();
+        }
 
         dataAccess.deleteAuth(authToken);
     }
@@ -69,7 +84,9 @@ public class UserService {
 
     private boolean verifyUser(String username, String providedTextPassword) throws DataAccessException {
         UserData user = dataAccess.getUser(username);
-        if (user == null) return false;
+        if (user == null) {
+            return false;
+        }
         return BCrypt.checkpw(providedTextPassword, user.password());
     }
 }

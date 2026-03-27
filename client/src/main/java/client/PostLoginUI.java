@@ -23,7 +23,9 @@ public class PostLoginUI {
             System.out.print(">>> : ");
             String line = scanner.nextLine();
             boolean thereIsInput = processCommand(line);
-            if (!thereIsInput) break;
+            if (!thereIsInput) {
+                break;
+            }
         }
     }
 

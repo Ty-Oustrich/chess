@@ -52,8 +52,9 @@ public class MySqlDataAccess implements DataAccess {
         };
         try (var conn = DatabaseManager.getConnection();
              var stmt = conn.createStatement()) {
-            for (String sql : createStatements)
+            for (String sql : createStatements) {
                 stmt.executeUpdate(sql);
+            }
         } catch (Exception e) {
             throw new DataAccessException("Failed to create tables", e);
         }
@@ -73,7 +74,9 @@ public class MySqlDataAccess implements DataAccess {
             preparedStatement.setInt(1, gameID);
 
             ResultSet resultSet = preparedStatement.executeQuery();
-            if (!resultSet.next()) return null;
+            if (!resultSet.next()) {
+                return null;
+            }
 
             return readGameFromResultSet(resultSet);
         } catch (Exception exception) {
@@ -109,8 +112,9 @@ public class MySqlDataAccess implements DataAccess {
             preparedStatement.setString(2, user.password());
             preparedStatement.setString(3, user.email());
 
-            if (preparedStatement.executeUpdate() != 1)
+            if (preparedStatement.executeUpdate() != 1) {
                 throw new DataAccessException("failed to insert user into database");
+            }
 
             return user;
         } catch (Exception exception) {
@@ -133,7 +137,9 @@ public class MySqlDataAccess implements DataAccess {
             preparedStatement.setString(1, username);
 
             ResultSet resultSet = preparedStatement.executeQuery();
-            if (!resultSet.next()) return null;
+            if (!resultSet.next()) {
+                return null;
+            }
 
             return new UserData(
                     resultSet.getString("username"),
@@ -161,8 +167,9 @@ public class MySqlDataAccess implements DataAccess {
             preparedStatement.setString(4, game.gameName());
             preparedStatement.setString(5, gson.toJson(game.game(), ChessGame.class));
 
-            if (preparedStatement.executeUpdate() != 1)
+            if (preparedStatement.executeUpdate() != 1) {
                 throw new DataAccessException("createGame insert returned unexpected row count");
+            }
 
             return game;
         } catch (Exception exception) {
@@ -183,8 +190,9 @@ public class MySqlDataAccess implements DataAccess {
             ResultSet resultSet = preparedStatement.executeQuery();
             Collection<GameData> games = new ArrayList<>();
 
-            while (resultSet.next())
+            while (resultSet.next()) {
                 games.add(readGameFromResultSet(resultSet));
+            }
 
             return games;
         } catch (Exception exception) {
@@ -209,8 +217,9 @@ public class MySqlDataAccess implements DataAccess {
             preparedStatement.setString(4, gson.toJson(game.game(), ChessGame.class));
             preparedStatement.setInt(5, game.gameID());
 
-            if (preparedStatement.executeUpdate() != 1)
+            if (preparedStatement.executeUpdate() != 1) {
                 throw new DataAccessException("no game row found for id=" + game.gameID());
+            }
         } catch (Exception exception) {
             throw new DataAccessException("updateGame failed for id" + game.gameID(), exception);
         }
@@ -229,8 +238,9 @@ public class MySqlDataAccess implements DataAccess {
             preparedStatement.setString(1, auth.authToken());
             preparedStatement.setString(2, auth.username());
 
-            if (preparedStatement.executeUpdate() != 1)
+            if (preparedStatement.executeUpdate() != 1) {
                 throw new DataAccessException("createAuth insert returned unexpected row count");
+            }
 
             return auth;
         } catch (Exception exception) {
@@ -252,7 +262,9 @@ public class MySqlDataAccess implements DataAccess {
             preparedStatement.setString(1, authToken);
 
             ResultSet resultSet = preparedStatement.executeQuery();
-            if (!resultSet.next()) return null;
+            if (!resultSet.next()) {
+                return null;
+            }
 
             return new AuthData(
                     resultSet.getString("auth_token"),

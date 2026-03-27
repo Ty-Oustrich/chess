@@ -73,7 +73,9 @@ public class ServerFacade {
         HttpRequest request = buildDeleteRequest(CLEAR_PATH);
         HttpResponse<String> response = send(request, "clear database");
         int statusCode = response.statusCode();
-        if (statusCode >= 200 && statusCode < 300) return;
+        if (statusCode >= 200 && statusCode < 300) {
+            return;
+        }
         throw new ServerFacadeException(statusCode, extractErrorMessage(response.body()));
     }
 
@@ -94,8 +96,9 @@ public class ServerFacade {
     /** Parses a good response into  given type or throws error code. */
     private <T> T parseResponse(HttpResponse<String> response, Class<T> resultClass) {
         int statusCode = response.statusCode();
-        if (statusCode >= 200 && statusCode < 300)
+        if (statusCode >= 200 && statusCode < 300) {
             return gson.fromJson(response.body(), resultClass);
+        }
         throw new ServerFacadeException(statusCode, extractErrorMessage(response.body()));
     }
 

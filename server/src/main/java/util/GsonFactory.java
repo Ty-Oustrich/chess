@@ -5,13 +5,13 @@ import com.google.gson.GsonBuilder;
 
 public final class GsonFactory {
 
-    private static final Gson gson = new GsonBuilder().create();
+    private static final Gson GSON = new GsonBuilder().create();
 
     private GsonFactory() {
     }
 
     public static Gson create() {
-        return gson;
+        return GSON;
     }
 }
 
