@@ -13,6 +13,7 @@ import io.javalin.*;
 import service.ClearService;
 import service.GameService;
 import service.UserService;
+import websocket.ConnectionManager;
 import websocket.WebSocketHandler;
 
 public class Server {
@@ -32,7 +33,8 @@ public class Server {
         ListGamesHandler listGamesHandler = new ListGamesHandler(gameService);
         CreateGameHandler createGameHandler = new CreateGameHandler(gameService);
         JoinGameHandler joinGameHandler = new JoinGameHandler(gameService);
-        WebSocketHandler webSocketHandler = new WebSocketHandler(dataAccess);
+        ConnectionManager connectionManager = new ConnectionManager();
+        WebSocketHandler webSocketHandler = new WebSocketHandler(dataAccess, connectionManager);
 
         javalin.delete("/db", clearHandler::handle);
         javalin.post("/user", registerHandler::handle);

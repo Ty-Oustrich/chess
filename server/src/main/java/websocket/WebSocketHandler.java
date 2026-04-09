@@ -24,9 +24,9 @@ public class WebSocketHandler {
     private final Gson gson;
 
 
-    public WebSocketHandler(DataAccess dataAccess) {
+    public WebSocketHandler(DataAccess dataAccess, ConnectionManager connectionManager) {
         this.dataAccess = dataAccess;
-        this.connectionManager = new ConnectionManager();
+        this.connectionManager = connectionManager;
         this.gson = GsonFactory.create();
     }
 
