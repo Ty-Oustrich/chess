@@ -13,6 +13,7 @@ import java.util.Objects;
 public class ChessGame {
     private TeamColor teamTurn;
     private ChessBoard board;
+    private boolean isOver = false;
 
     public ChessGame() {
         setTeamTurn(TeamColor.WHITE); //always first
@@ -37,6 +38,9 @@ public class ChessGame {
     public void setTeamTurn(TeamColor team) {
         teamTurn = team;
     }
+
+    public boolean isOver() { return isOver; }
+    public void setOver(boolean over) { this.isOver = over; }
 
     /**
      * Enum identifying the 2 possible teams in a chess game
@@ -224,11 +228,11 @@ public class ChessGame {
             return false;
         }
         ChessGame chessGame = (ChessGame) o;
-        return teamTurn == chessGame.teamTurn && Objects.equals(board, chessGame.board);
+        return teamTurn == chessGame.teamTurn && isOver == chessGame.isOver && Objects.equals(board, chessGame.board);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(teamTurn, board);
+        return Objects.hash(teamTurn, board, isOver);
     }
 }

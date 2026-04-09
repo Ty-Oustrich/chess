@@ -1,6 +1,10 @@
 package websocket;
 
 
+import chess.ChessGame;
+import chess.ChessMove;
+import chess.ChessPosition;
+import chess.InvalidMoveException;
 import com.google.gson.Gson;
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
@@ -31,11 +35,11 @@ public class WebSocketHandler {
     }
 
 
-    // websocket callbacks for connect, message, and close events.
-    public void register(WsConfig ws){
-        ws.onConnect(ctx -> this.handleConnectEvent(ctx));
-        ws.onMessage(msgCtx -> this.handleMessage(msgCtx));
-        ws.onClose(ctx -> this.handleCloseEvent(ctx));
+
+    public void register(WsConfig wsConfig) {
+        wsConfig.onConnect(this::handleConnectEvent);
+        wsConfig.onMessage(this::handleMessage);
+        wsConfig.onClose(this::handleCloseEvent);
     }
 
     private void handleConnectEvent(WsContext context) {
@@ -101,9 +105,71 @@ public class WebSocketHandler {
     private void handleMakeMove(WsContext context, MakeMoveCommand command) throws DataAccessException {
         AuthData authData = requireAuth(command.getAuthToken());
         GameData gameData = requireGame(command.getGameID());
+        ChessGame game = gameData.game();
+        String username = authData.username();
 
-        connectionManager.broadcastToGame(gameData.gameID(),
-                new NotificationMessage(authData.username() + " made a move"));
+        // make sure this person is a player, not just watching
+        boolean isWhite = Objects.equals(username, gameData.whiteUsername());
+        boolean isBlack = Objects.equals(username, gameData.blackUsername());
+        if (!isWhite && !isBlack) {
+            sendError(context, "error observers cannot make moves");
+            return;
+        }
+
+        if (game.isOver()) {
+            sendError(context, "error game is already over");
+            return;
+        }
+
+        // check whose turn it is
+        ChessGame.TeamColor playerColor = isWhite ? ChessGame.TeamColor.WHITE : ChessGame.TeamColor.BLACK;
+        if (game.getTeamTurn() != playerColor) {
+            sendError(context, "error not your turn");
+            return;
+        }
+
+        ChessMove move = command.getMove();
+        try {
+            game.makeMove(move);
+        } catch (InvalidMoveException e) {
+            sendError(context, "error: " + e.getMessage());
+            return;
+        }
+
+        dataAccess.updateGame(gameData);
+
+        // push the new board state
+        connectionManager.broadcastToGame(gameData.gameID(), new LoadGameMessage(game));
+
+       
+        String from = posToAlgebraic(move.getStartPosition());
+        String to = posToAlgebraic(move.getEndPosition());
+        connectionManager.broadcastToGameExcept(gameData.gameID(), context,
+                new NotificationMessage(username + " moved " + from + " to " + to));
+
+        // isInCheck or game over check
+        ChessGame.TeamColor opponent = (playerColor == ChessGame.TeamColor.WHITE)
+                ? ChessGame.TeamColor.BLACK : ChessGame.TeamColor.WHITE;
+
+        if (game.isInCheckmate(opponent)) {
+            game.setOver(true);
+            dataAccess.updateGame(gameData);
+            connectionManager.broadcastToGame(gameData.gameID(),
+                    new NotificationMessage(username + " wins by checkmate!"));
+        } else if (game.isInStalemate(opponent)) {
+            game.setOver(true);
+            dataAccess.updateGame(gameData);
+            connectionManager.broadcastToGame(gameData.gameID(),
+                    new NotificationMessage("Stalemate... the game ends in a draw."));
+        } else if (game.isInCheck(opponent)) {
+            connectionManager.broadcastToGame(gameData.gameID(), new NotificationMessage("Check!"));
+        }
+    }
+
+  
+    private String posToAlgebraic(ChessPosition pos) {
+        char col = (char) ('a' + pos.getColumn() - 1);
+        return "" + col + pos.getRow();
     }
 
 

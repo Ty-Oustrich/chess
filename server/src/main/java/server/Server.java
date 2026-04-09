@@ -43,7 +43,7 @@ public class Server {
         javalin.get("/game", listGamesHandler::handle);
         javalin.post("/game", createGameHandler::handle);
         javalin.put("/game", joinGameHandler::handle);
-        javalin.ws("/ws", ws -> webSocketHandler.register(ws));
+        javalin.ws("/ws", webSocketHandler::register);
     }
 
     public int run(int desiredPort) {
