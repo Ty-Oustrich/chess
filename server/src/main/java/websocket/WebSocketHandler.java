@@ -1,5 +1,6 @@
 package websocket;
 
+
 import com.google.gson.Gson;
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
@@ -14,6 +15,8 @@ import websocket.commands.UserGameCommand;
 import websocket.messages.ErrorMessage;
 import websocket.messages.LoadGameMessage;
 import websocket.messages.NotificationMessage;
+import java.util.Objects;
+
 
 public class WebSocketHandler {
     private final DataAccess dataAccess;
@@ -82,8 +85,17 @@ public class WebSocketHandler {
         context.attribute("gameID", gameData.gameID());
         connectionManager.addSession(gameData.gameID(), context);
         connectionManager.sendToSession(context, new LoadGameMessage(gameData.game()));
-        connectionManager.broadcastToGame(gameData.gameID(),
-                new NotificationMessage(authData.username() + " connected to game \" " + gameData.gameID() + "\""));
+
+        String name = authData.username();
+        String joinMessage;
+        if (Objects.equals(name, gameData.whiteUsername())) {
+            joinMessage = name + " joined as WHITE";
+        } else if (Objects.equals(name, gameData.blackUsername())) {
+            joinMessage = name + " joined as BLACK";
+        } else {
+            joinMessage = name + " is observing";
+        }
+        connectionManager.broadcastToGameExcept(gameData.gameID(), context, new NotificationMessage(joinMessage));
     }
 
     private void handleMakeMove(WsContext context, MakeMoveCommand command) throws DataAccessException {

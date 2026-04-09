@@ -40,6 +40,21 @@ public class ConnectionManager {
         }
     }
 
+ //simple func to exclude the sender
+    public void broadcastToGameExcept(Integer gameID, WsContext excludedSession, ServerMessage message) {
+        Set<WsContext> gameSessions = sessionsByGame.get(gameID);
+        if (gameSessions == null || gameSessions.isEmpty()) {
+            return;
+        }
+
+        for (WsContext session : gameSessions) {
+            if (session == excludedSession) {
+                continue;
+            }
+            sendToSession(session, message);
+        }
+    }
+
 
     public void sendToSession(WsContext session, ServerMessage message) {
         String messageJson = gson.toJson(message);
