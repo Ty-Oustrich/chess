@@ -176,19 +176,49 @@ public class WebSocketHandler {
     private void handleLeave(WsContext context, UserGameCommand command) throws DataAccessException {
         AuthData authData = requireAuth(command.getAuthToken());
         GameData gameData = requireGame(command.getGameID());
+        String username = authData.username();
+
+        // clear spot in game record for players
+        if (Objects.equals(username, gameData.whiteUsername())) {
+            GameData updated = new GameData(gameData.gameID(), null, gameData.blackUsername(),
+                    gameData.gameName(), gameData.game());
+            dataAccess.updateGame(updated);
+        } else if (Objects.equals(username, gameData.blackUsername())) {
+            GameData updated = new GameData(gameData.gameID(), gameData.whiteUsername(), null,
+                    gameData.gameName(), gameData.game());
+            dataAccess.updateGame(updated);
+        }
 
         connectionManager.removeSession(gameData.gameID(), context);
         connectionManager.broadcastToGame(gameData.gameID(),
-                new NotificationMessage(authData.username() + " left the game."));
+                new NotificationMessage(username + " left the game"));
     }
 
 
     private void handleResign(WsContext context, UserGameCommand command) throws DataAccessException {
         AuthData authData = requireAuth(command.getAuthToken());
         GameData gameData = requireGame(command.getGameID());
+        String username = authData.username();
+
+        // only actual players can resign
+        boolean isPlayer = Objects.equals(username, gameData.whiteUsername())
+                || Objects.equals(username, gameData.blackUsername());
+        if (!isPlayer) {
+            sendError(context, "error: observers cannot resign");
+            return;
+        }
+
+        if (gameData.game().isOver()) {
+            sendError(context, "error: game is already over");
+            return;
+        }
+
+        gameData.game().setOver(true);
+        dataAccess.updateGame(gameData);
+
 
         connectionManager.broadcastToGame(gameData.gameID(),
-            new NotificationMessage(authData.username() + " resigned from the game :-{"));
+                new NotificationMessage(username + " resigned from the game :-{"));
     }
 
 
