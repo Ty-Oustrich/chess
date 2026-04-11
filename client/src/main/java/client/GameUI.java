@@ -30,20 +30,17 @@ public class GameUI implements GameHandler {
         System.out.println("Type 'help' for game commands");
 
         Scanner scanner = new Scanner(System.in);
-        try {
-            while (true) {
-                System.out.print("GAME>>> ");
-                String userInput = scanner.nextLine();
-                boolean shouldContinue = processCommand(userInput);
-                if (!shouldContinue) break;
-            }
-        } finally {
-            scanner.close();
+        boolean running = true;
+        while (running) {
+            System.out.print("GAME>>> ");
+            String userInput = scanner.nextLine();
+            running = processCommand(userInput, scanner);
         }
+        scanner.close();
     }
 
 
-    private boolean processCommand(String userInput) {
+    private boolean processCommand(String userInput, Scanner scanner) {
         String trimmedInput = userInput == null ? "" : userInput.trim();
         if (trimmedInput.isEmpty()) {
             System.out.println("Please enter a command");
@@ -65,11 +62,31 @@ public class GameUI implements GameHandler {
                 System.out.println("You have left the gaem");
                 yield false;
             }
+            case "resign" -> {
+                handleResign(scanner);
+                yield true;
+            }
             default -> {
                 System.out.println("Unknown command. Type 'help' for game commands.");
                 yield true;
             }
         };
+    }
+
+    
+//Sends a resign command after a yes no confirmation 
+    private void handleResign(Scanner scanner) {
+        System.out.print("Resign this game? (yes/no): ");
+        String answer = scanner.nextLine().trim().toLowerCase();
+
+        switch (answer) {
+            case "yes" -> {
+                webSocketFacade.sendResign(authToken, gameID);
+                System.out.println("resignation sent");
+            }
+            case "no" -> System.out.println("staying in the game");
+            default -> System.out.println("invalid command: not resigning");
+        }
     }
 
 
@@ -86,6 +103,7 @@ public class GameUI implements GameHandler {
     private void printHelp() {
         System.out.println("help    - show available game commands");
         System.out.println("redraw  - print the current board");
+        System.out.println("resign  - resign from the game");
         System.out.println("leave   - leave the game and return");
     }
 
