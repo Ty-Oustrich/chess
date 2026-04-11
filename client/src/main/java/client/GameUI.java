@@ -1,11 +1,16 @@
 package client;
 
+import chess.ChessPiece;
+import chess.ChessPosition;
+import chess.ChessMove;
+
 import chess.ChessGame;
 import ui.BoardPrinter;
 import websocket.messages.ErrorMessage;
 import websocket.messages.NotificationMessage;
 import websocket.messages.LoadGameMessage;
 
+import java.util.Collection;
 import java.util.Scanner;
 
 public class GameUI implements GameHandler {
@@ -22,7 +27,6 @@ public class GameUI implements GameHandler {
         this.webSocketFacade = new WebSocketFacade(host, port, this);
     }
 
-   //command loop
     public void gameLoop() {
         webSocketFacade.sendConnect(authToken, gameID);
 
@@ -41,7 +45,7 @@ public class GameUI implements GameHandler {
 
 
     private boolean processCommand(String userInput, Scanner scanner) {
-        String trimmedInput = userInput == null ? "" : userInput.trim();
+        String trimmedInput = userInput.trim();
         if (trimmedInput.isEmpty()) {
             System.out.println("Please enter a command");
             return true;
@@ -59,11 +63,19 @@ public class GameUI implements GameHandler {
             }
             case "leave" -> {
                 webSocketFacade.sendLeave(authToken, gameID);
-                System.out.println("You have left the gaem");
+                System.out.println("left game");
                 yield false;
             }
             case "resign" -> {
                 handleResign(scanner);
+                yield true;
+            }
+            case "move" -> {
+                handleMove(scanner);
+                yield true;
+            }
+            case "highlight" -> {
+                handleHighlight(scanner);
                 yield true;
             }
             default -> {
@@ -89,6 +101,101 @@ public class GameUI implements GameHandler {
         }
     }
 
+    private void handleMove(Scanner scanner) {
+        if (game == null || game.getBoard() == null) {
+            System.out.println("No game loaded yet");
+            return;
+        }
+
+        System.out.print("Enter a chess move (example: e2 e4): ");
+        String line = scanner.nextLine().trim().toLowerCase();
+        String[] parts = line.split("\\s+");
+        if (parts.length != 2) {
+            System.out.println("Use format: e2 e4");
+            return;
+        }
+
+        ChessPosition start = parsePosition(parts[0]);
+        ChessPosition end = parsePosition(parts[1]);
+        if (start == null || end == null) {
+            System.out.println("Bad square input. Example: e2 e4");
+            return;
+        }
+
+        ChessPiece movingPiece = game.getBoard().getPiece(start);
+        if (movingPiece == null) {
+            System.out.println("No piece at " + parts[0]);
+            return;
+        }
+
+        ChessPiece.PieceType promotionPiece = null;
+        if (isPawnPromotionMove(movingPiece, end)) {
+            promotionPiece = promptPromotionPiece(scanner);
+            if (promotionPiece == null) return;
+        }
+
+        ChessMove move = new ChessMove(start, end, promotionPiece);
+        webSocketFacade.sendMakeMove(authToken, gameID, move);
+    }
+
+    private void handleHighlight(Scanner scanner) {
+        if (game == null || game.getBoard() == null) {
+            System.out.println("No game loaded yet");
+            return;
+        }
+
+        System.out.print("Enter piece square (example: e2): ");
+        String square = scanner.nextLine().trim().toLowerCase();
+        ChessPosition position = parsePosition(square);
+        if (position == null) {
+            System.out.println("not a square");
+            return;
+        }
+
+        Collection<ChessMove> legalMoves = game.validMoves(position);
+        if (legalMoves == null || legalMoves.isEmpty()) {
+            System.out.println("No legal moves from " + square);
+            return;
+        }
+
+        BoardPrinter.printBoardWithHighlights(game.getBoard(), isWhitePerspective(), legalMoves);
+    }
+
+    private ChessPosition parsePosition(String square) {
+        if (square == null || square.length() != 2) return null;
+
+        char file = Character.toLowerCase(square.charAt(0));
+        char rank = square.charAt(1);
+        if (file < 'a' || file > 'h' || rank < '1' || rank > '8') return null;
+
+        int col = file - 'a' + 1;
+        int row = rank - '0';
+        return new ChessPosition(row, col);
+    }
+
+    private boolean isPawnPromotionMove(ChessPiece movingPiece, ChessPosition end) {
+        if (movingPiece.getPieceType() != ChessPiece.PieceType.PAWN) return false;
+
+        if (movingPiece.getTeamColor() == ChessGame.TeamColor.WHITE) return end.getRow() == 8;
+        return end.getRow() == 1;
+    }
+
+    private ChessPiece.PieceType promptPromotionPiece(Scanner scanner) {
+        System.out.print("Promotion, type an option (queen/rook/bishop/knight): ");
+        String choice = scanner.nextLine().trim().toLowerCase();
+
+        return switch (choice) {
+            case "queen", "q" -> ChessPiece.PieceType.QUEEN;
+            case "rook", "r" -> ChessPiece.PieceType.ROOK;
+            case "bishop", "b" -> ChessPiece.PieceType.BISHOP;
+            case "knight", "n" -> ChessPiece.PieceType.KNIGHT;
+            default -> {
+                System.out.println("Invalid promotion choice");
+                yield null;
+            }
+        };
+    }
+
 
     private void redrawBoard() {
         if (game == null || game.getBoard() == null) {
@@ -102,7 +209,9 @@ public class GameUI implements GameHandler {
 
     private void printHelp() {
         System.out.println("help    - show available game commands");
-        System.out.println("redraw  - print the current board");
+        System.out.printf("%s%n", "redraw  - print the current board");
+        System.out.println("move    - make a move (example: e2 e4)");
+        System.out.println("highlight - show legal moves for one piece");
         System.out.println("resign  - resign from the game");
         System.out.println("leave   - leave the game and return");
     }
@@ -133,8 +242,7 @@ public class GameUI implements GameHandler {
 
 
     private boolean isWhitePerspective() {
-        if (playerColor == null) return true;
-        return playerColor == ChessGame.TeamColor.WHITE;
+        return playerColor == null || playerColor == ChessGame.TeamColor.WHITE;
     }
 
 
