@@ -6,6 +6,8 @@ import websocket.messages.ErrorMessage;
 import websocket.messages.NotificationMessage;
 import websocket.messages.LoadGameMessage;
 
+import java.util.Scanner;
+
 public class GameUI implements GameHandler {
     private final WebSocketFacade webSocketFacade;
     private final String authToken;
@@ -18,6 +20,73 @@ public class GameUI implements GameHandler {
         this.gameID = gameID;
         this.playerColor = playerColor;
         this.webSocketFacade = new WebSocketFacade(host, port, this);
+    }
+
+   //command loop
+    public void gameLoop() {
+        webSocketFacade.sendConnect(authToken, gameID);
+
+        System.out.println("Connected to game " + gameID);
+        System.out.println("Type 'help' for game commands");
+
+        Scanner scanner = new Scanner(System.in);
+        try {
+            while (true) {
+                System.out.print("GAME>>> ");
+                String userInput = scanner.nextLine();
+                boolean shouldContinue = processCommand(userInput);
+                if (!shouldContinue) break;
+            }
+        } finally {
+            scanner.close();
+        }
+    }
+
+
+    private boolean processCommand(String userInput) {
+        String trimmedInput = userInput == null ? "" : userInput.trim();
+        if (trimmedInput.isEmpty()) {
+            System.out.println("Please enter a command");
+            return true;
+        }
+
+        String command = trimmedInput.toLowerCase();
+        return switch (command) {
+            case "help" -> {
+                printHelp();
+                yield true;
+            }
+            case "redraw" -> {
+                redrawBoard();
+                yield true;
+            }
+            case "leave" -> {
+                webSocketFacade.sendLeave(authToken, gameID);
+                System.out.println("You have left the gaem");
+                yield false;
+            }
+            default -> {
+                System.out.println("Unknown command. Type 'help' for game commands.");
+                yield true;
+            }
+        };
+    }
+
+
+    private void redrawBoard() {
+        if (game == null || game.getBoard() == null) {
+            System.out.println("No game state loaded yet");
+            return;
+        }
+
+        BoardPrinter.printBoard(game.getBoard(), isWhitePerspective());
+    }
+
+
+    private void printHelp() {
+        System.out.println("help    - show available game commands");
+        System.out.println("redraw  - print the current board");
+        System.out.println("leave   - leave the game and return");
     }
 
  
