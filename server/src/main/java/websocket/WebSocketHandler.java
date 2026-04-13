@@ -10,7 +10,9 @@ import com.google.gson.JsonObject;
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
 import io.javalin.websocket.WsConfig;
+import io.javalin.websocket.WsCloseContext;
 import io.javalin.websocket.WsContext;
+import io.javalin.websocket.WsErrorContext;
 import io.javalin.websocket.WsMessageContext;
 import model.AuthData;
 import model.GameData;
@@ -41,16 +43,27 @@ public class WebSocketHandler {
         wsConfig.onConnect(this::handleConnectEvent);
         wsConfig.onMessage(this::handleMessage);
         wsConfig.onClose(this::handleCloseEvent);
+        wsConfig.onError(this::handleErrorEvent);
     }
 
     private void handleConnectEvent(WsContext context) {
-        //implement later
+        //needed?
     }
 
-    private void handleCloseEvent(WsContext context) {
+    private void handleCloseEvent(WsCloseContext context) {
+        System.out.println("ws close: status=" + context.status() + " reason=" + context.reason());
         Integer gameID = context.attribute("gameID");
         if (gameID != null) {
             connectionManager.removeSession(gameID, context);
+        }
+    }
+
+    private void handleErrorEvent(WsErrorContext context) {
+        Throwable error = context.error();
+        String errorMessage = (error == null) ? "unknown websocket error" : error.getMessage();
+        System.out.println("ws error: " + errorMessage);
+        if (error != null) {
+            error.printStackTrace();
         }
     }
 

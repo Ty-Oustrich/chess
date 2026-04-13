@@ -33,12 +33,28 @@ public class GameUI implements GameHandler {
         System.out.println("In game " + gameID);
         System.out.println("Type 'help' for game commands");
 
+        waitForInitialGameMessage();
+
         Scanner scanner = new Scanner(System.in);
         boolean running = true;
         while (running) {
+            webSocketFacade.processQueuedMessages();
             System.out.print("GAME>>> ");
             String userInput = scanner.nextLine();
             running = processCommand(userInput, scanner);
+            webSocketFacade.processQueuedMessages();
+        }
+    }
+
+    private void waitForInitialGameMessage() {
+        for (int attempt = 0; attempt < 20 && game == null; attempt++) {
+            webSocketFacade.processQueuedMessages();
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException exception) {
+                Thread.currentThread().interrupt();
+                return;
+            }
         }
     }
 
