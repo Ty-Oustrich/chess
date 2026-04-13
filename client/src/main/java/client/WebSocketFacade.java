@@ -13,21 +13,20 @@ import websocket.messages.LoadGameMessage;
 import websocket.messages.NotificationMessage;
 import websocket.messages.ServerMessage;
 
-import jakarta.websocket.CloseReason;
-import jakarta.websocket.ClientEndpoint;
-import jakarta.websocket.OnClose;
-import jakarta.websocket.OnError;
-import jakarta.websocket.OnMessage;
-import jakarta.websocket.Session;
+import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketError;
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
+import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-@ClientEndpoint
+@WebSocket
 public class WebSocketFacade {
 
     private final Gson gson = new Gson();
     private GameHandler gameHandler;
-    private final Session session;
+    private Session session;
     private final Queue<String> incomingMessages = new ConcurrentLinkedQueue<>();
 
 
@@ -43,24 +42,18 @@ public class WebSocketFacade {
         this.gameHandler = gameHandler;
     }
 
-    @OnMessage
+    @OnWebSocketMessage
     public void onMessage(String messageJson) {
         incomingMessages.add(messageJson);
     }
 
-    @OnClose
-    public void onClose(CloseReason closeReason) {
-        if (closeReason == null) {
-            incomingMessages.add(gson.toJson(new ErrorMessage("websocket closed")));
-            return;
-        }
-
-        String closeText = "websocket closed (" + closeReason.getCloseCode().getCode()
-                + "): " + closeReason.getReasonPhrase();
+    @OnWebSocketClose
+    public void onClose(int statusCode, String reason) {
+        String closeText = "websocket closed (" + statusCode + "): " + reason;
         incomingMessages.add(gson.toJson(new ErrorMessage(closeText)));
     }
 
-    @OnError
+    @OnWebSocketError
     public void onError(Throwable exception) {
         String errorMessage = exception == null ? "unknown websocket error" : exception.getMessage();
         incomingMessages.add(gson.toJson(new ErrorMessage("websocket error: " + errorMessage)));
@@ -111,16 +104,13 @@ public class WebSocketFacade {
         sendCommand(new ConnectCommand(authToken, gameID));
     }
 
-
     public void sendMakeMove(String authToken, Integer gameID, ChessMove move) {
         sendCommand(new MakeMoveCommand(authToken, gameID, move));
     }
 
-
     public void sendLeave(String authToken, Integer gameID) {
         sendCommand(new LeaveCommand(authToken, gameID));
     }
-
 
     public void sendResign(String authToken, Integer gameID) {
         sendCommand(new ResignCommand(authToken, gameID));

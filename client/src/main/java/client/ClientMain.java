@@ -9,7 +9,7 @@ public class ClientMain {
 
 
 
-        ServerFacade serverFacade = new ServerFacade(8080);
+        ServerFacade serverFacade = new ServerFacade(4040);
         PreLoginUI preLoginUI = new PreLoginUI(serverFacade);
         PostLoginUI postLoginUI = new PostLoginUI(serverFacade);
 

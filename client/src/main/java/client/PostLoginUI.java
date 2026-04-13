@@ -16,7 +16,7 @@ import java.util.Scanner;
 
 public class PostLoginUI {
     private static final String SERVER_HOST = "127.0.0.1";
-    private static final int SERVER_PORT = 8080;
+    private static final int SERVER_PORT = 4040;
 
     private final ServerFacade serverFacade;
     private SessionData currentSession;

@@ -1,11 +1,8 @@
 package client;
 
-import jakarta.websocket.ContainerProvider;
-import jakarta.websocket.DeploymentException;
-import jakarta.websocket.Session;
-import jakarta.websocket.WebSocketContainer;
+import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.client.WebSocketClient;
 
-import java.io.IOException;
 import java.net.URI;
 
 public final class WebSocketConnection {
@@ -19,16 +16,13 @@ public final class WebSocketConnection {
         if (port <= 0) throw new IllegalArgumentException("port must be positive");
 
         try {
-            String webSocketUrl = buildWebSocketUrl(host, port);
-            WebSocketContainer container = ContainerProvider.getWebSocketContainer();
-            return container.connectToServer(facade, URI.create(webSocketUrl));
-        } catch (DeploymentException | IOException | RuntimeException exception) {
+            String url = "ws://" + host + ":" + port + "/ws";
+            WebSocketClient client = new WebSocketClient();
+            client.start();
+            return client.connect(facade, URI.create(url)).get();
+        } catch (Exception exception) {
             throw new RuntimeException("unable to connect websocket client", exception);
         }
-    }
-
-    private static String buildWebSocketUrl(String host, int port) {
-        return "ws://" + host + ":" + port + "/ws";
     }
 
     public static void sendText(Session session, String payload) {
@@ -37,8 +31,8 @@ public final class WebSocketConnection {
         }
 
         try {
-            session.getBasicRemote().sendText(payload);
-        } catch (IOException exception) {
+            session.getRemote().sendString(payload);
+        } catch (Exception exception) {
             throw new RuntimeException("unable to send websocket command", exception);
         }
     }
