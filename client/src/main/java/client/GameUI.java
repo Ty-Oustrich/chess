@@ -152,6 +152,12 @@ public class GameUI implements GameHandler {
             return;
         }
 
+        ChessPiece selectedPiece = game.getBoard().getPiece(position);
+        if (selectedPiece == null) {
+            System.out.println("No piece at " + square);
+            return;
+        }
+
         Collection<ChessMove> legalMoves = game.validMoves(position);
         if (legalMoves == null || legalMoves.isEmpty()) {
             System.out.println("No legal moves from " + square);

@@ -18,15 +18,11 @@ public class BoardPrinter {
     }
 
     public static void printBoardWithHighlights(ChessBoard board, boolean whitePerspective, Collection<ChessMove> moves) {
+        if (board == null) throw new IllegalArgumentException("board is required");
+
         System.out.println();
         printColumnHeaders(whitePerspective);
-
-        Set<ChessPosition> highlightedSquares = new HashSet<>();
-        if (moves != null) {
-            for (ChessMove move : moves) {
-                highlightedSquares.add(move.getEndPosition());
-            }
-        }
+        Set<ChessPosition> highlightedSquares = collectHighlightedSquares(moves);
 
         if (whitePerspective) {
             for (int row = 8; row >= 1; row--) {
@@ -40,6 +36,16 @@ public class BoardPrinter {
 
         printColumnHeaders(whitePerspective);
         System.out.println();
+    }
+
+    private static Set<ChessPosition> collectHighlightedSquares(Collection<ChessMove> moves) {
+        Set<ChessPosition> highlightedSquares = new HashSet<>();
+        if (moves == null) return highlightedSquares;
+
+        for (ChessMove move : moves) {
+            highlightedSquares.add(move.getEndPosition());
+        }
+        return highlightedSquares;
     }
 
     private static void printBoardRow(
@@ -80,18 +86,7 @@ public class BoardPrinter {
             Set<ChessPosition> highlightedSquares
     ) {
         ChessPosition currentPosition = new ChessPosition(row, col);
-        boolean isLightSquare = (row + col) % 2 != 0;
-
-        String squareBg;
-        if (isLightSquare) {
-            squareBg = SET_BG_COLOR_WHITE;
-        } else {
-            squareBg = SET_BG_COLOR_DARK_GREEN;
-        }
-
-        if (highlightedSquares.contains(currentPosition)) {
-            squareBg = SET_BG_COLOR_YELLOW;
-        }
+        String squareBg = getSquareBackground(row, col, currentPosition, highlightedSquares);
         line.append(squareBg);
 
         ChessPiece piece = board.getPiece(currentPosition);
@@ -107,6 +102,14 @@ public class BoardPrinter {
             textColor = SET_TEXT_COLOR_BLUE;
         }
         line.append(textColor).append(getPieceSymbol(piece));
+    }
+
+    private static String getSquareBackground(int row, int col, ChessPosition currentPosition,
+                                              Set<ChessPosition> highlightedSquares) {
+        if (highlightedSquares.contains(currentPosition)) return SET_BG_COLOR_YELLOW;
+
+        boolean isLightSquare = (row + col) % 2 != 0;
+        return isLightSquare ? SET_BG_COLOR_WHITE : SET_BG_COLOR_DARK_GREEN;
     }
 
 
