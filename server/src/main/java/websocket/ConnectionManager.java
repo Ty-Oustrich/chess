@@ -5,6 +5,7 @@ import websocket.messages.ServerMessage;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
+import java.util.Objects;
 import com.google.gson.Gson;
 import io.javalin.websocket.WsContext;
 import util.GsonFactory;
@@ -40,15 +41,15 @@ public class ConnectionManager {
         }
     }
 
- //simple func to exclude the sender
     public void broadcastToGameExcept(Integer gameID, WsContext excludedSession, ServerMessage message) {
         Set<WsContext> gameSessions = sessionsByGame.get(gameID);
         if (gameSessions == null || gameSessions.isEmpty()) {
             return;
         }
 
+        String excludedSessionId = excludedSession == null ? null : excludedSession.sessionId();
         for (WsContext session : gameSessions) {
-            if (session == excludedSession) {
+            if (Objects.equals(session.sessionId(), excludedSessionId)) {
                 continue;
             }
             sendToSession(session, message);
