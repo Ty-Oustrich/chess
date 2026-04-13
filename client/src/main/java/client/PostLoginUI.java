@@ -9,13 +9,15 @@
 package client;
 
 import chess.ChessGame;
-import ui.BoardPrinter;
 
 import java.util.Scanner;
 
 
 
 public class PostLoginUI {
+    private static final String SERVER_HOST = "localhost";
+    private static final int SERVER_PORT = 8080;
+
     private final ServerFacade serverFacade;
     private SessionData currentSession;
 
@@ -102,16 +104,17 @@ public class PostLoginUI {
 
         try {
             serverFacade.joinGame(currentSession.authToken(), colorInput, gameID);
-            System.out.printf("Joined game %d as %s%n", gameID, colorInput);
         } catch (ServerFacade.ServerFacadeException exception) {
             System.out.println("join failed -> " + exception.getMessage());
             return;
         }
 
-        boolean isWhite = colorInput.equals("WHITE");
-
-        ChessGame game = new ChessGame();
-        BoardPrinter.printBoard(game.getBoard(), isWhite);
+        ChessGame.TeamColor teamColor = parseTeamColor(colorInput);
+        if (teamColor == null) {
+            System.out.println("color must be WHITE or BLACK");
+            return;
+        }
+        runGameSession(gameID, teamColor);
     }
 
 
@@ -124,10 +127,7 @@ public class PostLoginUI {
             return;
         }
 
-        System.out.println("Observing game " + gameID);
-
-        ChessGame game = new ChessGame();
-        BoardPrinter.printBoard(game.getBoard(), true);
+        runGameSession(gameID, null);
     }
 
     private void handleCreate(Scanner scanner) {
@@ -174,6 +174,35 @@ public class PostLoginUI {
             return Integer.parseInt(gameIDInput);
         } catch (NumberFormatException exception) {
             return null;
+        }
+    }
+
+    /** Convert user text color into the enum used by game state. */
+    private ChessGame.TeamColor parseTeamColor(String colorInput) {
+        return switch (colorInput) {
+            case "WHITE" -> ChessGame.TeamColor.WHITE;
+            case "BLACK" -> ChessGame.TeamColor.BLACK;
+            default -> null;
+        };
+    }
+
+    private void runGameSession(int gameID, ChessGame.TeamColor playerColor) {
+        WebSocketFacade webSocketFacade;
+        try {
+            webSocketFacade = new WebSocketFacade(SERVER_HOST, SERVER_PORT, null);
+        } catch (RuntimeException exception) {
+            System.out.println("websocket setup failed -> " + exception.getMessage());
+            return;
+        }
+
+        GameUI gameUI = new GameUI(webSocketFacade, currentSession.authToken(), gameID, playerColor);
+        webSocketFacade.setGameHandler(gameUI);
+
+        try {
+            webSocketFacade.sendConnect(currentSession.authToken(), gameID);
+            gameUI.gameLoop();
+        } catch (RuntimeException exception) {
+            System.out.println("game session ended with an error -> " + exception.getMessage());
         }
     }
 

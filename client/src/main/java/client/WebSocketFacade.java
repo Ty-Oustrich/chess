@@ -21,35 +21,40 @@ import jakarta.websocket.Session;
 public class WebSocketFacade {
 
     private final Gson gson = new Gson();
-    private final GameHandler gameHandler;
+    private GameHandler gameHandler;
     private final Session session;
 
 
     public WebSocketFacade(String host, int port, GameHandler gameHandler) {
         if (host == null || host.isBlank()) throw new IllegalArgumentException("host is required");
-        if (gameHandler == null) throw new IllegalArgumentException("gameHandler is required");
 
         this.gameHandler = gameHandler;
         this.session = WebSocketConnection.connect(this, host, port);
     }
 
+    /** Attach the game message callback once GameUI is ready. */
+    public void setGameHandler(GameHandler gameHandler) {
+        if (gameHandler == null) throw new IllegalArgumentException("gameHandler is required");
+        this.gameHandler = gameHandler;
+    }
 
     @OnMessage
     public void onMessage(String messageJson) {
+        GameHandler currentGameHandler = requireGameHandler();
         try {
             ServerMessage message = gson.fromJson(messageJson, ServerMessage.class);
             if (message == null || message.getServerMessageType() == null) {
-                gameHandler.onError(new ErrorMessage("error reading websocket message: missing serverMessageType"));
+                currentGameHandler.onError(new ErrorMessage("error reading websocket message: missing serverMessageType"));
                 return;
             }
 
             switch (message.getServerMessageType()) {
-                case LOAD_GAME -> gameHandler.onLoadGame(gson.fromJson(messageJson, LoadGameMessage.class));
-                case ERROR -> gameHandler.onError(gson.fromJson(messageJson, ErrorMessage.class));
-                case NOTIFICATION -> gameHandler.onNotification(gson.fromJson(messageJson, NotificationMessage.class));
+                case LOAD_GAME -> currentGameHandler.onLoadGame(gson.fromJson(messageJson, LoadGameMessage.class));
+                case ERROR -> currentGameHandler.onError(gson.fromJson(messageJson, ErrorMessage.class));
+                case NOTIFICATION -> currentGameHandler.onNotification(gson.fromJson(messageJson, NotificationMessage.class));
             }
         } catch (JsonParseException e) {
-            gameHandler.onError(new ErrorMessage("error reading websocket message: " + e.getMessage()));
+            currentGameHandler.onError(new ErrorMessage("error reading websocket message: " + e.getMessage()));
         }
     }
 
@@ -73,6 +78,10 @@ public class WebSocketFacade {
         sendCommand(new ResignCommand(authToken, gameID));
     }
 
+    private GameHandler requireGameHandler() {
+        if (gameHandler == null) throw new RuntimeException("game handler is not attached");
+        return gameHandler;
+    }
 
     private void sendCommand(UserGameCommand command) {
         if (session == null || !session.isOpen()) throw new RuntimeException("websocket is not connected");

@@ -20,17 +20,17 @@ public class GameUI implements GameHandler {
     private final ChessGame.TeamColor playerColor;
     private ChessGame game;
 
-    public GameUI(String host, int port, String authToken, int gameID, ChessGame.TeamColor playerColor) {
+
+    public GameUI(WebSocketFacade webSocketFacade, String authToken, int gameID, ChessGame.TeamColor playerColor) {
+        if (webSocketFacade == null) throw new IllegalArgumentException("webSocketFacade is required");
         this.authToken = authToken;
         this.gameID = gameID;
         this.playerColor = playerColor;
-        this.webSocketFacade = new WebSocketFacade(host, port, this);
+        this.webSocketFacade = webSocketFacade;
     }
 
     public void gameLoop() {
-        webSocketFacade.sendConnect(authToken, gameID);
-
-        System.out.println("Connected to game " + gameID);
+        System.out.println("In game " + gameID);
         System.out.println("Type 'help' for game commands");
 
         Scanner scanner = new Scanner(System.in);
@@ -40,7 +40,6 @@ public class GameUI implements GameHandler {
             String userInput = scanner.nextLine();
             running = processCommand(userInput, scanner);
         }
-        scanner.close();
     }
 
 
@@ -139,7 +138,7 @@ public class GameUI implements GameHandler {
     }
 
     private void handleHighlight(Scanner scanner) {
-        
+
         if (game == null || game.getBoard() == null) {
             System.out.println("No game loaded yet");
             return;
