@@ -17,29 +17,34 @@ public class ConnectionManager {
     private final Gson gson = GsonFactory.create();
 
 
+
     public void addSession(Integer gameID, WsContext session) {
-        Set<WsContext> gameSessions = sessionsByGame.get(gameID);
-        if (gameSessions == null) {
-            gameSessions = ConcurrentHashMap.newKeySet();
-            sessionsByGame.put(gameID, gameSessions);
-        }
+        Set<WsContext> gameSessions = sessionsByGame.computeIfAbsent(gameID, ignored -> ConcurrentHashMap.newKeySet());
         gameSessions.add(session);
     }
 
 
 
 
-//can exclude the sender later? idk whats needed yet
+
     public void broadcastToGame(Integer gameID, ServerMessage message) {
         Set<WsContext> gameSessions = sessionsByGame.get(gameID);
         if (gameSessions == null || gameSessions.isEmpty()) {
             return;
         }
 
+        Set<WsContext> staleSessions = ConcurrentHashMap.newKeySet();
         for (WsContext session : gameSessions) {
-            sendToSession(session, message);
+            if (!sendToSession(session, message)) {
+                staleSessions.add(session);
+            }
+        }
+
+        for (WsContext staleSession : staleSessions) {
+            removeSession(gameID, staleSession);
         }
     }
+
 
     public void broadcastToGameExcept(Integer gameID, WsContext excludedSession, ServerMessage message) {
         Set<WsContext> gameSessions = sessionsByGame.get(gameID);
@@ -47,20 +52,34 @@ public class ConnectionManager {
             return;
         }
 
+        Set<WsContext> staleSessions = ConcurrentHashMap.newKeySet();
         String excludedSessionId = excludedSession == null ? null : excludedSession.sessionId();
         for (WsContext session : gameSessions) {
             if (Objects.equals(session.sessionId(), excludedSessionId)) {
                 continue;
             }
-            sendToSession(session, message);
+            if (!sendToSession(session, message)) {
+                staleSessions.add(session);
+            }
+        }
+
+        for (WsContext staleSession : staleSessions) {
+            removeSession(gameID, staleSession);
         }
     }
 
 
-    public void sendToSession(WsContext session, ServerMessage message) {
+    
+    public boolean sendToSession(WsContext session, ServerMessage message) {
         String messageJson = gson.toJson(message);
-        session.send(messageJson);
+        try {
+            session.send(messageJson);
+            return true;
+        } catch (Exception sendException) {
+            return false;
+        }
     }
+
 
     public void removeSession(Integer gameID, WsContext session) {
         Set<WsContext> gameSessions = sessionsByGame.get(gameID);
