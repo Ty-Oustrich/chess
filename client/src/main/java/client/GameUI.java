@@ -139,6 +139,7 @@ public class GameUI implements GameHandler {
     }
 
     private void handleHighlight(Scanner scanner) {
+        
         if (game == null || game.getBoard() == null) {
             System.out.println("No game loaded yet");
             return;
