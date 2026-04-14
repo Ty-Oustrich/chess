@@ -13,28 +13,24 @@ import websocket.messages.LoadGameMessage;
 import websocket.messages.NotificationMessage;
 import websocket.messages.ServerMessage;
 
-import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketError;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
-import org.eclipse.jetty.websocket.api.annotations.WebSocket;
+import java.net.http.WebSocket;
 import java.util.Queue;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-@WebSocket
-public class WebSocketFacade {
+public class WebSocketFacade implements WebSocket.Listener {
 
     private final Gson gson = new Gson();
     private GameHandler gameHandler;
-    private Session session;
-    private final Queue<String> incomingMessages = new ConcurrentLinkedQueue<>();
+    private WebSocket webSocket;
 
+    private final Queue<String> incomingMessages = new ConcurrentLinkedQueue<>();
+    private final StringBuilder messageBuffer = new StringBuilder();
 
     public WebSocketFacade(String host, int port, GameHandler gameHandler) {
         if (host == null || host.isBlank()) throw new IllegalArgumentException("host is required");
-
         this.gameHandler = gameHandler;
-        this.session = WebSocketConnection.connect(this, host, port);
+        this.webSocket = WebSocketConnection.connect(this, host, port);
     }
 
     public void setGameHandler(GameHandler gameHandler) {
@@ -42,20 +38,29 @@ public class WebSocketFacade {
         this.gameHandler = gameHandler;
     }
 
-    @OnWebSocketMessage
-    public void onMessage(String messageJson) {
-        incomingMessages.add(messageJson);
+    @Override
+    public CompletionStage<?> onText(WebSocket ws, CharSequence data, boolean last) {
+        messageBuffer.append(data);
+        ws.request(1);
+
+        if (last) {
+            incomingMessages.add(messageBuffer.toString());
+            messageBuffer.setLength(0);
+        }
+
+        return null;
     }
 
-    @OnWebSocketClose
-    public void onClose(int statusCode, String reason) {
+    @Override
+    public CompletionStage<?> onClose(WebSocket ws, int statusCode, String reason) {
         String closeText = "websocket closed (" + statusCode + "): " + reason;
         incomingMessages.add(gson.toJson(new ErrorMessage(closeText)));
+        return null;
     }
 
-    @OnWebSocketError
-    public void onError(Throwable exception) {
-        String errorMessage = exception == null ? "unknown websocket error" : exception.getMessage();
+    @Override
+    public void onError(WebSocket ws, Throwable error) {
+        String errorMessage = error == null ? "unknown websocket error" : error.getMessage();
         incomingMessages.add(gson.toJson(new ErrorMessage("websocket error: " + errorMessage)));
     }
 
@@ -73,7 +78,6 @@ public class WebSocketFacade {
     private void handleMessage(String messageJson, GameHandler currentGameHandler) {
         ServerMessage.ServerMessageType messageType = parseMessageType(messageJson, currentGameHandler);
         if (messageType == null) return;
-
         dispatchMessage(messageType, messageJson, currentGameHandler);
     }
 
@@ -99,7 +103,6 @@ public class WebSocketFacade {
         }
     }
 
-
     public void sendConnect(String authToken, Integer gameID) {
         sendCommand(new ConnectCommand(authToken, gameID));
     }
@@ -117,10 +120,7 @@ public class WebSocketFacade {
     }
 
     private void sendCommand(UserGameCommand command) {
-        if (session == null || !session.isOpen()) {
-            throw new RuntimeException("websocket is not connected");
-        }
-        String commandJson = gson.toJson(command);
-        WebSocketConnection.sendText(session, commandJson);
+        if (webSocket == null) throw new RuntimeException("websocket is not connected");
+        WebSocketConnection.sendText(webSocket, gson.toJson(command));
     }
 }

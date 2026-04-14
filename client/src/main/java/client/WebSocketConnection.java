@@ -1,39 +1,35 @@
 package client;
 
-import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.client.WebSocketClient;
-
 import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.WebSocket;
 
 public final class WebSocketConnection {
 
-    private WebSocketConnection() {
-    }
+    private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
 
-    public static Session connect(WebSocketFacade facade, String host, int port) {
-        if (facade == null) throw new IllegalArgumentException("facade is required");
+    private WebSocketConnection() {}
+
+    public static WebSocket connect(WebSocket.Listener listener, String host, int port) {
+        if (listener == null) throw new IllegalArgumentException("listener is required");
         if (host == null || host.isBlank()) throw new IllegalArgumentException("host is required");
         if (port <= 0) throw new IllegalArgumentException("port must be positive");
 
         try {
-            String url = "ws://" + host + ":" + port + "/ws";
-            WebSocketClient client = new WebSocketClient();
-            client.start();
-            Session session = client.connect(facade, URI.create(url)).get();
-            session.setIdleTimeout(java.time.Duration.ZERO);
-            return session;
+            URI uri = URI.create("ws://" + host + ":" + port + "/ws");
+            return HTTP_CLIENT.newWebSocketBuilder().buildAsync(uri, listener).get();
         } catch (Exception exception) {
             throw new RuntimeException("unable to connect websocket client", exception);
         }
     }
 
-    public static void sendText(Session session, String payload) {
-        if (session == null || payload == null) {
-            throw new IllegalArgumentException("session and payload are required");
+    public static void sendText(WebSocket webSocket, String payload) {
+        if (webSocket == null || payload == null) {
+            throw new IllegalArgumentException("webSocket and payload are required");
         }
 
         try {
-            session.getRemote().sendString(payload);
+            webSocket.sendText(payload, true).get();
         } catch (Exception exception) {
             throw new RuntimeException("unable to send websocket command", exception);
         }
