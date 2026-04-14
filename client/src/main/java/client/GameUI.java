@@ -19,6 +19,7 @@ public class GameUI implements GameHandler {
     private final int gameID;
     private final ChessGame.TeamColor playerColor;
     private ChessGame game;
+    private volatile boolean isGameRunning = false;
 
 
     public GameUI(WebSocketFacade webSocketFacade, String authToken, int gameID, ChessGame.TeamColor playerColor) {
@@ -37,15 +38,30 @@ public class GameUI implements GameHandler {
 
         waitForInitialGameMessage();
 
+        isGameRunning = true;
+        Thread notificationThread = new Thread(() -> {
+            while (isGameRunning) {
+                webSocketFacade.processQueuedMessages();
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException exception) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+        });
+        notificationThread.setDaemon(true);
+        notificationThread.start();
+
         Scanner scanner = new Scanner(System.in);
         boolean running = true;
         while (running) {
-            webSocketFacade.processQueuedMessages();
             System.out.print("GAME>>> ");
             String userInput = scanner.nextLine();
             running = processCommand(userInput, scanner);
-            webSocketFacade.processQueuedMessages();
         }
+
+        isGameRunning = false;
     }
 
     private void waitForInitialGameMessage() {
@@ -60,61 +76,46 @@ public class GameUI implements GameHandler {
         }
     }
 
-
     private boolean processCommand(String userInput, Scanner scanner) {
-        String trimmedInput = userInput.trim();
-        if (trimmedInput.isEmpty()) {
+        String command = userInput.trim().toLowerCase();
+
+        if (command.isEmpty()) {
             System.out.println("Please enter a command");
             return true;
         }
 
-        String command = trimmedInput.toLowerCase();
-        return switch (command) {
-            case "help" -> {
-                printHelp();
-                yield true;
-            }
-            case "redraw" -> {
-                redrawBoard();
-                yield true;
-            }
-            case "leave" -> {
-                webSocketFacade.sendLeave(authToken, gameID);
-                System.out.println("left game");
-                yield false;
-            }
-            case "resign" -> {
-                handleResign(scanner);
-                yield true;
-            }
-            case "move" -> {
-                handleMove(scanner);
-                yield true;
-            }
-            case "highlight" -> {
-                handleHighlight(scanner);
-                yield true;
-            }
-            default -> {
-                System.out.println("Unknown command. Type 'help' for game commands.");
-                yield true;
-            }
-        };
+        if (command.equals("help")) {
+            printHelp();
+        } else if (command.equals("redraw")) {
+            redrawBoard();
+        } else if (command.equals("leave")) {
+            webSocketFacade.sendLeave(authToken, gameID);
+            System.out.println("left game");
+            return false;
+        } else if (command.equals("resign")) {
+            handleResign(scanner);
+        } else if (command.equals("move")) {
+            handleMove(scanner);
+        } else if (command.equals("highlight")) {
+            handleHighlight(scanner);
+        } else {
+            System.out.println("Unknown command. Type 'help' for game commands.");
+        }
+
+        return true;
     }
 
-    
-//Sends a resign command after a yes no confirmation 
     private void handleResign(Scanner scanner) {
         System.out.print("Resign this game? (yes/no): ");
         String answer = scanner.nextLine().trim().toLowerCase();
 
-        switch (answer) {
-            case "yes" -> {
-                webSocketFacade.sendResign(authToken, gameID);
-                System.out.println("resignation sent");
-            }
-            case "no" -> System.out.println("staying in the game");
-            default -> System.out.println("invalid command: not resigning");
+        if (answer.equals("yes")) {
+            webSocketFacade.sendResign(authToken, gameID);
+            System.out.println("resignation sent");
+        } else if (answer.equals("no")) {
+            System.out.println("staying in the game");
+        } else {
+            System.out.println("invalid command: not resigning");
         }
     }
 
@@ -158,7 +159,6 @@ public class GameUI implements GameHandler {
     }
 
     private void handleHighlight(Scanner scanner) {
-
         if (game == null || game.getBoard() == null) {
             System.out.println("No game loaded yet");
             return;
@@ -230,7 +230,6 @@ public class GameUI implements GameHandler {
         };
     }
 
-
     private void redrawBoard() {
         if (game == null || game.getBoard() == null) {
             System.out.println("No game state loaded yet");
@@ -240,17 +239,15 @@ public class GameUI implements GameHandler {
         BoardPrinter.printBoard(game.getBoard(), isWhitePerspective());
     }
 
-
     private void printHelp() {
-        System.out.println("help    - show available game commands");
-        System.out.printf("%s%n", "redraw  - print the current board");
-        System.out.println("move    - make a move (example: e2 e4)");
+        System.out.println("help      - show available game commands");
+        System.out.println("redraw    - print the current board");
+        System.out.println("move      - make a move (example: e2 e4)");
         System.out.println("highlight - show legal moves for one piece");
-        System.out.println("resign  - resign from the game");
-        System.out.println("leave   - leave the game and return");
+        System.out.println("resign    - resign from the game");
+        System.out.println("leave     - leave the game and return");
     }
 
- 
     @Override
     public void onLoadGame(LoadGameMessage message) {
         this.game = message.getGame();
@@ -262,43 +259,35 @@ public class GameUI implements GameHandler {
         BoardPrinter.printBoard(this.game.getBoard(), isWhitePerspective());
     }
 
-
     @Override
     public void onError(ErrorMessage message) {
         System.out.println(message.getErrorMessage());
     }
-
 
     @Override
     public void onNotification(NotificationMessage message) {
         System.out.println(message.getMessage());
     }
 
-
     private boolean isWhitePerspective() {
         return playerColor == null || playerColor == ChessGame.TeamColor.WHITE;
     }
-
 
     public WebSocketFacade getWebSocketFacade() {
         return webSocketFacade;
     }
 
- 
     public String getAuthToken() {
         return authToken;
     }
 
-  
     public int getGameID() {
         return gameID;
     }
 
- 
     public ChessGame.TeamColor getPlayerColor() {
         return playerColor;
     }
-
 
     public ChessGame getGame() {
         return game;
