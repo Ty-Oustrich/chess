@@ -19,7 +19,9 @@ public final class WebSocketConnection {
             String url = "ws://" + host + ":" + port + "/ws";
             WebSocketClient client = new WebSocketClient();
             client.start();
-            return client.connect(facade, URI.create(url)).get();
+            Session session = client.connect(facade, URI.create(url)).get();
+            session.setIdleTimeout(java.time.Duration.ZERO);
+            return session;
         } catch (Exception exception) {
             throw new RuntimeException("unable to connect websocket client", exception);
         }
