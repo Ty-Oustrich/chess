@@ -37,6 +37,7 @@ public class GameUI implements GameHandler {
         System.out.println("Type 'help' for game commands");
 
         waitForInitialGameMessage();
+        showBoardAfterJoining();
 
         isGameRunning = true;
         Thread notificationThread = new Thread(() -> {
@@ -62,6 +63,16 @@ public class GameUI implements GameHandler {
         }
 
         isGameRunning = false;
+    }
+
+    /** Draw the board right after join once initial game data arrives. */
+    private void showBoardAfterJoining() {
+        if (game == null || game.getBoard() == null) {
+            System.out.println("No game state loaded yet");
+            return;
+        }
+
+        BoardPrinter.printBoard(game.getBoard(), isWhitePerspective());
     }
 
     private void waitForInitialGameMessage() {
