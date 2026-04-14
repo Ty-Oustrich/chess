@@ -47,7 +47,7 @@ public class WebSocketHandler {
     }
 
     private void handleConnectEvent(WsContext context) {
-        //needed?
+        context.session.setIdleTimeout(java.time.Duration.ZERO);
     }
 
     private void handleCloseEvent(WsCloseContext context) {
