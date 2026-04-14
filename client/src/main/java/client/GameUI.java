@@ -22,7 +22,9 @@ public class GameUI implements GameHandler {
 
 
     public GameUI(WebSocketFacade webSocketFacade, String authToken, int gameID, ChessGame.TeamColor playerColor) {
-        if (webSocketFacade == null) throw new IllegalArgumentException("webSocketFacade is required");
+        if (webSocketFacade == null) {
+            throw new IllegalArgumentException("webSocketFacade is required");
+        }
         this.authToken = authToken;
         this.gameID = gameID;
         this.playerColor = playerColor;
@@ -146,7 +148,9 @@ public class GameUI implements GameHandler {
         ChessPiece.PieceType promotionPiece = null;
         if (isPawnPromotionMove(movingPiece, end)) {
             promotionPiece = promptPromotionPiece(scanner);
-            if (promotionPiece == null) return;
+            if (promotionPiece == null) {
+                return;
+            }
         }
 
         ChessMove move = new ChessMove(start, end, promotionPiece);
@@ -184,11 +188,15 @@ public class GameUI implements GameHandler {
     }
 
     private ChessPosition parsePosition(String square) {
-        if (square == null || square.length() != 2) return null;
+        if (square == null || square.length() != 2) {
+            return null;
+        }
 
         char file = Character.toLowerCase(square.charAt(0));
         char rank = square.charAt(1);
-        if (file < 'a' || file > 'h' || rank < '1' || rank > '8') return null;
+        if (file < 'a' || file > 'h' || rank < '1' || rank > '8') {
+            return null;
+        }
 
         int col = file - 'a' + 1;
         int row = rank - '0';
@@ -196,9 +204,13 @@ public class GameUI implements GameHandler {
     }
 
     private boolean isPawnPromotionMove(ChessPiece movingPiece, ChessPosition end) {
-        if (movingPiece.getPieceType() != ChessPiece.PieceType.PAWN) return false;
+        if (movingPiece.getPieceType() != ChessPiece.PieceType.PAWN) {
+            return false;
+        }
 
-        if (movingPiece.getTeamColor() == ChessGame.TeamColor.WHITE) return end.getRow() == 8;
+        if (movingPiece.getTeamColor() == ChessGame.TeamColor.WHITE) {
+            return end.getRow() == 8;
+        }
         return end.getRow() == 1;
     }
 

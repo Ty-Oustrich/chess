@@ -11,9 +11,15 @@ public final class WebSocketConnection {
     private WebSocketConnection() {}
 
     public static WebSocket connect(WebSocket.Listener listener, String host, int port) {
-        if (listener == null) throw new IllegalArgumentException("listener is required");
-        if (host == null || host.isBlank()) throw new IllegalArgumentException("host is required");
-        if (port <= 0) throw new IllegalArgumentException("port must be positive");
+        if (listener == null) {
+            throw new IllegalArgumentException("listener is required");
+        }
+        if (host == null || host.isBlank()) {
+            throw new IllegalArgumentException("host is required");
+        }
+        if (port <= 0) {
+            throw new IllegalArgumentException("port must be positive");
+        }
 
         try {
             URI uri = URI.create("ws://" + host + ":" + port + "/ws");

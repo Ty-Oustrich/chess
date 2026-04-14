@@ -28,13 +28,17 @@ public class WebSocketFacade implements WebSocket.Listener {
     private final StringBuilder messageBuffer = new StringBuilder();
 
     public WebSocketFacade(String host, int port, GameHandler gameHandler) {
-        if (host == null || host.isBlank()) throw new IllegalArgumentException("host is required");
+        if (host == null || host.isBlank()) {
+            throw new IllegalArgumentException("host is required");
+        }
         this.gameHandler = gameHandler;
         this.webSocket = WebSocketConnection.connect(this, host, port);
     }
 
     public void setGameHandler(GameHandler gameHandler) {
-        if (gameHandler == null) throw new IllegalArgumentException("gameHandler is required");
+        if (gameHandler == null) {
+            throw new IllegalArgumentException("gameHandler is required");
+        }
         this.gameHandler = gameHandler;
     }
 
@@ -66,7 +70,9 @@ public class WebSocketFacade implements WebSocket.Listener {
 
     public void processQueuedMessages() {
         GameHandler currentGameHandler = gameHandler;
-        if (currentGameHandler == null) return;
+        if (currentGameHandler == null) {
+            return;
+        }
 
         String messageJson = incomingMessages.poll();
         while (messageJson != null) {
@@ -77,7 +83,9 @@ public class WebSocketFacade implements WebSocket.Listener {
 
     private void handleMessage(String messageJson, GameHandler currentGameHandler) {
         ServerMessage.ServerMessageType messageType = parseMessageType(messageJson, currentGameHandler);
-        if (messageType == null) return;
+        if (messageType == null) {
+            return;
+        }
         dispatchMessage(messageType, messageJson, currentGameHandler);
     }
 
@@ -120,7 +128,9 @@ public class WebSocketFacade implements WebSocket.Listener {
     }
 
     private void sendCommand(UserGameCommand command) {
-        if (webSocket == null) throw new RuntimeException("websocket is not connected");
+        if (webSocket == null) {
+            throw new RuntimeException("websocket is not connected");
+        }
         WebSocketConnection.sendText(webSocket, gson.toJson(command));
     }
 }

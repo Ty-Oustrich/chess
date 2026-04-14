@@ -142,11 +142,17 @@ public class WebSocketHandler {
         String username = authData.username();
 
         ChessGame.TeamColor playerColor = getPlayerColorForMove(context, username, gameData);
-        if (playerColor == null) return;
-        if (isMoveRejectedByGameState(context, game, playerColor)) return;
+        if (playerColor == null) {
+            return;
+        }
+        if (isMoveRejectedByGameState(context, game, playerColor)) {
+            return;
+        }
 
         ChessMove move = command.getMove();
-        if (!tryApplyMove(context, game, move)) return;
+        if (!tryApplyMove(context, game, move)) {
+            return;
+        }
 
         GameData updatedGameData = rebuildGameData(gameData, game);
         dataAccess.updateGame(updatedGameData);
@@ -281,8 +287,9 @@ public class WebSocketHandler {
             return;
         }
 
-        if (game.isInCheck(opponent))
+        if (game.isInCheck(opponent)) {
             connectionManager.broadcastToGame(gameID, new NotificationMessage("Check!"));
+        }
     }
 
 

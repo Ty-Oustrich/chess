@@ -18,7 +18,9 @@ public class BoardPrinter {
     }
 
     public static void printBoardWithHighlights(ChessBoard board, boolean whitePerspective, Collection<ChessMove> moves) {
-        if (board == null) throw new IllegalArgumentException("board is required");
+        if (board == null) {
+            throw new IllegalArgumentException("board is required");
+        }
 
         System.out.println();
         printColumnHeaders(whitePerspective);
@@ -40,7 +42,9 @@ public class BoardPrinter {
 
     private static Set<ChessPosition> collectHighlightedSquares(Collection<ChessMove> moves) {
         Set<ChessPosition> highlightedSquares = new HashSet<>();
-        if (moves == null) return highlightedSquares;
+        if (moves == null) {
+            return highlightedSquares;
+        }
 
         for (ChessMove move : moves) {
             highlightedSquares.add(move.getEndPosition());
@@ -106,7 +110,9 @@ public class BoardPrinter {
 
     private static String getSquareBackground(int row, int col, ChessPosition currentPosition,
                                               Set<ChessPosition> highlightedSquares) {
-        if (highlightedSquares.contains(currentPosition)) return SET_BG_COLOR_YELLOW;
+        if (highlightedSquares.contains(currentPosition)) {
+            return SET_BG_COLOR_YELLOW;
+        }
 
         boolean isLightSquare = (row + col) % 2 != 0;
         return isLightSquare ? SET_BG_COLOR_WHITE : SET_BG_COLOR_DARK_GREEN;
